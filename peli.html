@@ -6,43 +6,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>LA PELI DE LA SEMANA</title>
 <style>
-  html, body {
-    margin:0; padding:0;
-    background:black;
-    width:100%; height:100%;
-    overflow:hidden;
-  }
-  #movie, #adVideo {
-    position: fixed;
-    top:0; left:0;
-    width:100vw;
-    height:100vh;
+  body {margin:0; padding:0; background:black; overflow:hidden;}
+  video {
+    width:100vw; height:100vh;
     object-fit:contain;
     background:black;
   }
   #backButton {
     position: fixed;
-    top:20px;
-    left:20px;
+    top: 20px; left: 20px;
     background: rgba(0,0,0,0.6);
-    color:white;
-    border:none;
-    border-radius:50%;
-    padding:10px 15px;
-    font-size:18px;
-    cursor:pointer;
-    display:none;
-    z-index:1000;
+    color: #fff;
+    border: none; border-radius: 50%;
+    padding: 10px 15px; font-size: 18px;
+    cursor: pointer;
+    display: none; z-index: 10000;
   }
   #adOverlay {
     position: fixed;
     top:0; left:0;
     width:100vw; height:100vh;
     background:black;
-    display:flex;
+    display:none;
     justify-content:center;
     align-items:center;
-    z-index:999;
+    z-index: 9999;
   }
   #adOverlay video {
     width:100%; height:100%;
@@ -52,14 +40,17 @@
 </head>
 <body>
 
+<!-- Película principal -->
 <video id="movie" controls playsinline webkit-playsinline>
   <source src="https://ia800802.us.archive.org/5/items/idiocracia-2006-brrip-m-720p-x-264-ac-3-es/Idiocracia%20%282006%29%20%5BBRrip%20m720p%20x264%20AC3%28ES%29%5D.mp4" type="video/mp4">
   Tu navegador no soporta el video.
 </video>
 
-<button id="backButton" onclick="window.location.href='index.html'">⟵</button>
+<!-- Botón regresar -->
+<button id="backButton">⟵</button>
 
-<div id="adOverlay" style="display:none;">
+<!-- Overlay anuncio -->
+<div id="adOverlay">
   <video id="adVideo" playsinline webkit-playsinline>
     <source src="https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4" type="video/mp4">
     Tu navegador no soporta el video de anuncio.
@@ -72,12 +63,12 @@ const backButton = document.getElementById('backButton');
 const adOverlay = document.getElementById('adOverlay');
 const adVideo = document.getElementById('adVideo');
 
-const adInterval = 10*60; // 10 minutos en segundos
+const adInterval = 10*60; // 10 minutos
 let nextAdTime = adInterval;
 let adPlaying = false;
 let userInteracted = false;
 
-// Mostrar burbuja de regresar al tocar la pantalla
+// Mostrar burbuja de regresar al tocar
 let hideTimeout;
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
@@ -86,49 +77,10 @@ document.addEventListener('click', () => {
   hideTimeout = setTimeout(()=>{ backButton.style.display='none'; }, 4000);
 });
 
-// Temporizador de anuncios
-function startAdTimer(){
-  if(!movie.adTimer){
-    movie.adTimer = setInterval(()=>{
-      if(!adPlaying && movie.currentTime >= nextAdTime){
-        playAd();
-        nextAdTime += adInterval;
-      }
-    }, 1000);
-  }
-}
+// Botón regresar
+backButton.addEventListener('click', ()=>{ window.location.href='index.html'; });
 
-// Reproducir anuncio
-function playAd(){
-  adPlaying = true;
-  movie.pause();
-  adOverlay.style.display = 'flex';
-  adVideo.currentTime = 0;
-  adVideo.muted = false;
-
-  // Forzar reproducción en iOS/Android
-  const playPromise = adVideo.play();
-  if(playPromise !== undefined){
-    playPromise.catch(()=>{ 
-      adVideo.muted = true;
-      adVideo.play().catch(()=>{});
-    });
-  }
-
-  adVideo.onended = () => {
-    adOverlay.style.display = 'none';
-    adPlaying = false;
-    adVideo.muted = false;
-    movie.play().catch(()=>{});
-  };
-}
-
-// Iniciar temporizador cuando el usuario reproduce la película
-movie.addEventListener('play', ()=>{
-  if(userInteracted) startAdTimer();
-});
-
-// Ajustar video a pantalla
+// Ajuste videos
 function adjustVideoSize(){
   movie.style.width = window.innerWidth + "px";
   movie.style.height = window.innerHeight + "px";
@@ -139,11 +91,51 @@ window.addEventListener('resize', adjustVideoSize);
 window.addEventListener('orientationchange', adjustVideoSize);
 adjustVideoSize();
 
-// Primer toque para habilitar audio en iOS
-document.addEventListener('touchstart', () => { 
-  userInteracted = true;
+// Temporizador de anuncio
+function setupAdTimer(){
+  setInterval(()=>{
+    if(!adPlaying && movie.currentTime >= nextAdTime){
+      playAd();
+      nextAdTime += adInterval;
+    }
+  }, 1000);
+}
+movie.addEventListener('play', ()=>{
+  if(!movie.adTimer && userInteracted){
+    setupAdTimer();
+  }
+});
+
+// Función mostrar anuncio
+function playAd(){
+  adPlaying = true;
+  movie.pause();
+  adOverlay.style.display='flex';
+  adVideo.currentTime = 0;
+  adVideo.muted = false;
+
+  const playPromise = adVideo.play();
+  if(playPromise !== undefined){
+    playPromise.catch(() => {
+      adVideo.muted = true;
+      adVideo.play().catch(()=>{});
+    });
+  }
+}
+
+// Cuando termina anuncio
+adVideo.addEventListener('ended', ()=>{
+  adOverlay.style.display='none';
+  adPlaying = false;
   movie.play().catch(()=>{});
+});
+
+// Primer toque iOS/Android para permitir audio
+document.addEventListener('touchstart', ()=>{
+  movie.load();
+  adVideo.load();
 }, {once:true});
+
 </script>
 
 </body>
