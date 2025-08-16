@@ -60,7 +60,7 @@ const backButton = document.getElementById('backButton');
 const adOverlay = document.getElementById('adOverlay');
 const adVideo = document.getElementById('adVideo');
 
-const adInterval = 10*60;
+const adInterval = 10*60; // 10 minutos
 let nextAdTime = adInterval;
 let adPlaying = false;
 let userInteracted = false;
@@ -69,7 +69,7 @@ let hideTimeout;
 // Detect Android
 const isAndroid = /Android/i.test(navigator.userAgent);
 
-// Mostrar burbuja de regresar al tocar
+// Mostrar burbuja al tocar
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
   userInteracted = true;
@@ -77,9 +77,10 @@ document.addEventListener('click', () => {
   hideTimeout = setTimeout(()=>{ backButton.style.display='none'; }, 4000);
 });
 
+// Botón regresar
 backButton.addEventListener('click', ()=>{ window.location.href='index.html'; });
 
-// Ajuste videos
+// Ajustar tamaño
 function adjustVideoSize(){
   movie.style.width = window.innerWidth + "px";
   movie.style.height = window.innerHeight + "px";
@@ -90,18 +91,23 @@ window.addEventListener('resize', adjustVideoSize);
 window.addEventListener('orientationchange', adjustVideoSize);
 adjustVideoSize();
 
-// Temporizador de anuncio
-function setupAdTimer(){
-  setInterval(()=>{
-    if(!adPlaying && movie.currentTime >= nextAdTime){
-      playAd();
-      nextAdTime += adInterval;
-    }
-  }, 1000);
-}
-movie.addEventListener('play', ()=>{
-  if(!movie.adTimer && userInteracted){
-    setupAdTimer();
+// --- 🔹 Control de anuncios con timeupdate ---
+movie.addEventListener('timeupdate', () => {
+  if(!adPlaying && movie.currentTime >= nextAdTime){
+    playAd();
+    nextAdTime += adInterval;
+  }
+});
+
+// --- 🔹 Forzar landscape en Android ---
+movie.addEventListener('play', async () => {
+  if(isAndroid && movie.requestFullscreen){
+    try {
+      await movie.requestFullscreen();
+      if(screen.orientation && screen.orientation.lock){
+        await screen.orientation.lock("landscape").catch(()=>{});
+      }
+    } catch(e){}
   }
 });
 
@@ -113,21 +119,19 @@ function playAd(){
   adVideo.currentTime = 0;
   adVideo.muted = false;
 
-  // Forzar reproducción Android
-  if(isAndroid){
-    const touchHandler = () => {
-      adVideo.play().catch(()=>{ adVideo.muted=true; adVideo.play(); });
-      document.removeEventListener('touchstart', touchHandler);
-    };
-    document.addEventListener('touchstart', touchHandler, {once:true});
-  }
-
-  const playPromise = adVideo.play();
-  if(playPromise !== undefined){
-    playPromise.catch(() => {
+  const tryPlay = () => {
+    adVideo.play().catch(() => {
       adVideo.muted = true;
       adVideo.play().catch(()=>{});
     });
+  };
+
+  // En Android, esperar interacción si aún no la hubo
+  if(isAndroid && !userInteracted){
+    const touchHandler = () => { tryPlay(); };
+    document.addEventListener('touchstart', touchHandler, {once:true});
+  } else {
+    tryPlay();
   }
 }
 
@@ -138,16 +142,27 @@ adVideo.addEventListener('ended', ()=>{
   movie.play().catch(()=>{});
 });
 
-// Primer toque iOS/Android para permitir audio
+// Primer toque desbloquea audio en iOS/Android
 document.addEventListener('touchstart', ()=>{
   movie.load();
   adVideo.load();
 }, {once:true});
-
 </script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
