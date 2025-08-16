@@ -51,7 +51,7 @@ const movie = document.getElementById('movie');
 const backButton = document.getElementById('backButton');
 const activateSound = document.getElementById('activateSound');
 
-const adInterval = 10*60; // 10 minutos en segundos
+const adInterval = 10*60; // 10 minutos
 let nextAdTime = adInterval;
 let adPlaying = false;
 let hideTimeout;
@@ -62,7 +62,7 @@ const isAndroid = /Android/i.test(navigator.userAgent);
 // Guardar tiempo de película antes del anuncio
 let movieTimeBeforeAd = 0;
 
-// Botón regresar
+// Mostrar botón regresar
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
   clearTimeout(hideTimeout);
@@ -79,7 +79,7 @@ window.addEventListener('resize', adjustVideoSize);
 window.addEventListener('orientationchange', adjustVideoSize);
 adjustVideoSize();
 
-// Temporizador para anuncios cada 10 minutos
+// Temporizador para anuncios cada 10 minutos usando timeupdate
 movie.addEventListener('timeupdate', () => {
   if(!adPlaying && movie.currentTime >= nextAdTime){
     nextAdTime += adInterval;
@@ -107,28 +107,28 @@ async function playAd(){
   // Android: autoplay seguro en mute
   if(isAndroid){
     movie.muted = true;
-    try{ await movie.play(); } catch(e){
+    try{ 
+      await movie.play(); 
+    } catch(e){
       activateSound.style.display = 'block';
     }
   } else {
-    // iPhone: reproducir normalmente
     movie.muted = false;
     movie.play().catch(()=>{});
   }
 
-  // Botón activar sonido si autoplay falla
-  activateSound.style.display = 'none';
+  // Mostrar burbuja de sonido solo en Android
+  activateSound.style.display = isAndroid ? 'block' : 'none';
   activateSound.onclick = () => {
     movie.muted = false;
     movie.play().catch(()=>{});
     activateSound.style.display = 'none';
   };
 
-  // Al terminar el anuncio, volver a la película
+  // Al terminar el anuncio, volver a la película rápidamente
   const onAdEnded = () => {
     movie.removeEventListener('ended', onAdEnded);
 
-    // Restaurar video de la película
     movie.src = originalSrc;
     movie.querySelector('source').type = originalType;
     movie.load();
@@ -139,6 +139,8 @@ async function playAd(){
     movie.muted = false;
     movie.play().catch(()=>{});
     adPlaying = false;
+
+    // Ocultar burbuja al terminar
     activateSound.style.display = 'none';
   };
   movie.addEventListener('ended', onAdEnded);
