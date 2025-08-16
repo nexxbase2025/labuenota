@@ -1,7 +1,7 @@
 
 {
-  "name": "RADIO MAX SOLO EXITOS",
-  "short_name": "RADIOMAX",
+  "name": "LA BUENOTA RADIO ONLINE",
+  "short_name": " LA BUENOTA",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
