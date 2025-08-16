@@ -71,7 +71,7 @@
   }
   .social-row-abajo a {
     background: #fff;
-    padding: 10px;
+    padding: 4px;
     border-radius: 50%;
     box-shadow: 0 4px 10px rgba(0,0,0,0.4);
     display: flex;
@@ -83,8 +83,8 @@
     transform: scale(1.15);
   }
   .social-row-abajo img {
-    width: 26px;
-    height: 26px;
+    width: 40px;
+    height: 40px;
   }
   .radio-player {
     position: fixed;
@@ -170,21 +170,23 @@
     font-weight: bold;
   }
   #peli-bubble {
-    position: fixed;
-    bottom: 400px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #f1bd02;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 25px;
-    font-weight: bold;
-    font-size: 15px;
-    cursor: pointer;
-    box-shadow: 0 0 15px #f1bd02;
-    z-index: 10002;
-    text-align: center;
-  }
+  position: fixed;
+  bottom: 400px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f1bd02;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 25px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 0 15px #f1bd02;
+  z-index: 10002;
+  text-align: center;
+  white-space: nowrap;      /* Evita salto de línea */
+  display: inline-block;    /* Ajusta el ancho al texto */
+}
 </style>
 </head>
 <body>
@@ -193,8 +195,8 @@
 <div id="peli-bubble">🎬 LA PELI DE LA SEMANA</div>
 
 <nav class="social-row-abajo" aria-label="Redes sociales">
-  <a href="https://wa.me/14699822453" target="_blank" rel="noopener"><img src="what.webp" alt="WhatsApp" /></a>
-  <a href="https://www.facebook.com/radiomaxsda" target="_blank" rel="noopener"><img src="face.webp" alt="Facebook" /></a>
+  <a href="https://wa.me/593984827009" target="_blank" rel="noopener"><img src="what.webp" alt="WhatsApp" /></a>
+  <a href="https://www.facebook.com/labuenotaradioonline" target="_blank" rel="noopener"><img src="face.webp" alt="Facebook" /></a>
   <a href="https://www.instagram.com/guillermo_villagran_delgado/reel/DGLaDCZJuHX/" target="_blank" rel="noopener"><img src="ins.webp" alt="Instagram" /></a>
   <a href="https://www.tiktok.com/@radiomaxsoloexitos" target="_blank" rel="noopener"><img src="tik.webp" alt="TikTok" /></a>
 </nav>
@@ -213,7 +215,7 @@
   <div class="spectrum" id="spectrum"></div>
 </div>
 
-<audio id="audio" preload="auto" src="https://stream.zeno.fm/yv4pxfcq6igvv"></audio>
+<audio id="audio" preload="auto" src="https://stream.zeno.fm/jpsr5zsxjlguv"></audio>
 
 <div id="install-bubble">📲 Instalar app</div>
 <div id="ios-install-prompt">
