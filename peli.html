@@ -59,7 +59,10 @@ let hideTimeout;
 // Detect Android
 const isAndroid = /Android/i.test(navigator.userAgent);
 
-// Mostrar botón regresar
+// Guardar tiempo de película antes del anuncio
+let movieTimeBeforeAd = 0;
+
+// Botón regresar
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
   clearTimeout(hideTimeout);
@@ -87,6 +90,10 @@ movie.addEventListener('timeupdate', () => {
 // Función reproducir anuncio
 async function playAd(){
   adPlaying = true;
+
+  // Guardar tiempo actual de la película
+  movieTimeBeforeAd = movie.currentTime;
+
   movie.pause();
 
   const originalSrc = movie.querySelector('source').src;
@@ -104,7 +111,7 @@ async function playAd(){
       activateSound.style.display = 'block';
     }
   } else {
-    // iPhone: simplemente reproducir
+    // iPhone: reproducir normalmente
     movie.muted = false;
     movie.play().catch(()=>{});
   }
@@ -120,9 +127,15 @@ async function playAd(){
   // Al terminar el anuncio, volver a la película
   const onAdEnded = () => {
     movie.removeEventListener('ended', onAdEnded);
+
+    // Restaurar video de la película
     movie.src = originalSrc;
     movie.querySelector('source').type = originalType;
     movie.load();
+
+    // Restaurar tiempo donde se pausó
+    movie.currentTime = movieTimeBeforeAd;
+
     movie.muted = false;
     movie.play().catch(()=>{});
     adPlaying = false;
