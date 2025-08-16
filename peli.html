@@ -22,22 +22,8 @@
     cursor: pointer;
     display: none; z-index: 10000;
   }
-  #adOverlay {
-    position: fixed;
-    top:0; left:0;
-    width:100vw; height:100vh;
-    background:black;
-    display:none;
-    justify-content:center;
-    align-items:center;
-    z-index: 9999;
-  }
-  #adOverlay video {
-    width:100%; height:100%;
-    object-fit:contain;
-  }
   #activateSound {
-    position: absolute;
+    position: fixed;
     bottom: 30px; left: 50%;
     transform: translateX(-50%);
     background: rgba(255,255,255,0.9);
@@ -58,35 +44,24 @@
 </video>
 
 <button id="backButton">⟵</button>
-
-<div id="adOverlay">
-  <video id="adVideo" playsinline webkit-playsinline>
-    <source src="https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4" type="video/mp4">
-    Tu navegador no soporta el video de anuncio.
-  </video>
-  <button id="activateSound">Activar sonido</button>
-</div>
+<button id="activateSound">Activar sonido</button>
 
 <script>
 const movie = document.getElementById('movie');
 const backButton = document.getElementById('backButton');
-const adOverlay = document.getElementById('adOverlay');
-const adVideo = document.getElementById('adVideo');
 const activateSound = document.getElementById('activateSound');
 
 const adInterval = 10*60; // 10 minutos
 let nextAdTime = adInterval;
 let adPlaying = false;
-let userInteracted = false;
 let hideTimeout;
 
 // Detect Android
 const isAndroid = /Android/i.test(navigator.userAgent);
 
-// Mostrar burbuja de regresar al tocar
+// Mostrar botón regresar al tocar
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
-  userInteracted = true;
   clearTimeout(hideTimeout);
   hideTimeout = setTimeout(()=>{ backButton.style.display='none'; }, 4000);
 });
@@ -96,77 +71,70 @@ backButton.addEventListener('click', ()=>{ window.location.href='index.html'; })
 function adjustVideoSize(){
   movie.style.width = window.innerWidth + "px";
   movie.style.height = window.innerHeight + "px";
-  adVideo.style.width = window.innerWidth + "px";
-  adVideo.style.height = window.innerHeight + "px";
 }
 window.addEventListener('resize', adjustVideoSize);
 window.addEventListener('orientationchange', adjustVideoSize);
 adjustVideoSize();
 
-// Anuncios cada 10 min usando timeupdate
+// ---- Temporizador para anuncio cada 10 min ----
 movie.addEventListener('timeupdate', () => {
   if(!adPlaying && movie.currentTime >= nextAdTime){
-    playAd();
     nextAdTime += adInterval;
+    playAd();
   }
 });
 
-// En Android: forzar fullscreen y landscape al reproducir la peli
-movie.addEventListener('play', async () => {
-  if(isAndroid && movie.requestFullscreen){
-    try {
-      await movie.requestFullscreen();
-      if(screen.orientation && screen.orientation.lock){
-        await screen.orientation.lock("landscape").catch(()=>{});
-      }
-    } catch(e){}
-  }
-});
-
-// Función mostrar anuncio
-function playAd(){
+// ---- Función para reproducir anuncio en Android ----
+async function playAd(){
+  if(!isAndroid) return; // iPhone no se toca
   adPlaying = true;
   movie.pause();
-  adOverlay.style.display='flex';
 
-  // Android: autoplay en mute si no hubo interacción
-  adVideo.muted = isAndroid ? true : false;
-  adVideo.currentTime = 0;
-  adVideo.controls = false;
-  adVideo.load();
+  // Crear video de anuncio dinámico
+  const adVideo = document.createElement('video');
+  adVideo.src = "https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4";
+  adVideo.playsInline = true;
+  adVideo.webkitPlaysInline = true;
+  adVideo.muted = true; // autoplay seguro en Android
+  adVideo.style.background = 'black';
+  adVideo.style.width = '100%';
+  adVideo.style.height = '100%';
 
-  if(isAndroid){
-    activateSound.style.display = 'block';
-    activateSound.onclick = () => {
-      adVideo.muted = false;
-      adVideo.play().catch(()=>{});
-      activateSound.style.display = 'none';
-    };
+  // Botón activar sonido
+  activateSound.style.display = 'block';
+  activateSound.onclick = () => {
+    adVideo.muted = false;
+    adVideo.play().catch(()=>{});
+    activateSound.style.display = 'none';
+  };
+
+  // Poner fullscreen
+  document.body.appendChild(adVideo);
+  try{
+    await adVideo.requestFullscreen();
+    await adVideo.play();
+  } catch(e){
+    console.log("Error autoplay anuncio:", e);
   }
 
-  adVideo.play().catch(() => {
-    if(isAndroid){
-      // fallback: mostrar botón para que el usuario active sonido
-      activateSound.style.display = 'block';
-    }
+  // Cuando termina anuncio
+  adVideo.addEventListener('ended', async ()=>{
+    adPlaying = false;
+    activateSound.style.display = 'none';
+    try{
+      await document.exitFullscreen();
+    } catch(e){}
+    adVideo.remove();
+    movie.play().catch(()=>{});
   });
 }
-
-// Cuando termina el anuncio, volver a la peli
-adVideo.addEventListener('ended', ()=>{
-  adOverlay.style.display='none';
-  adPlaying = false;
-  if(isAndroid) activateSound.style.display = 'none';
-  movie.play().catch(()=>{});
-});
 
 // Primer toque desbloquea audio en iOS/Android
 document.addEventListener('touchstart', ()=>{
   movie.load();
-  adVideo.load();
 }, {once:true});
-
 </script>
+
 </body>
 </html>
 
