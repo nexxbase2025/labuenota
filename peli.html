@@ -8,14 +8,14 @@
 <style>
   body {
     margin:0; padding:0;
-    background:#000;
+    background:black;
     overflow:hidden;
   }
   video {
     width:100vw;
     height:100vh;
     object-fit:contain;
-    background:#000;
+    background:black;
   }
   #backButton {
     position: fixed;
@@ -48,22 +48,23 @@
 </style>
 </head>
 <body>
-  <!-- Película principal -->
-  <video id="movie" playsinline webkit-playsinline controls>
-    <source src="https://ia800802.us.archive.org/5/items/idiocracia-2006-brrip-m-720p-x-264-ac-3-es/Idiocracia%20%282006%29%20%5BBRrip%20m720p%20x264%20AC3%28ES%29%5D.mp4" type="video/mp4">
-    Tu navegador no soporta el video.
+
+<!-- Película principal -->
+<video id="movie" controls playsinline webkit-playsinline>
+  <source src="https://ia800802.us.archive.org/5/items/idiocracia-2006-brrip-m-720p-x-264-ac-3-es/Idiocracia%20%282006%29%20%5BBRrip%20m720p%20x264%20AC3%28ES%29%5D.mp4" type="video/mp4">
+  Tu navegador no soporta el video.
+</video>
+
+<!-- Botón regresar -->
+<button id="backButton" onclick="window.location.href='index.html'">⟵</button>
+
+<!-- Overlay anuncio -->
+<div id="adOverlay">
+  <video id="adVideo" playsinline webkit-playsinline muted>
+    <source src="https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4" type="video/mp4">
+    Tu navegador no soporta el video de anuncio.
   </video>
-
-  <!-- Botón de regresar -->
-  <button id="backButton" onclick="window.location.href='index.html'">⟵</button>
-
-  <!-- Overlay anuncio -->
-  <div id="adOverlay">
-    <video id="adVideo" playsinline webkit-playsinline muted>
-      <source src="https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4" type="video/mp4">
-      Tu navegador no soporta el video de anuncio.
-    </video>
-  </div>
+</div>
 
 <script>
 const movie = document.getElementById('movie');
@@ -71,48 +72,72 @@ const backButton = document.getElementById('backButton');
 const adOverlay = document.getElementById('adOverlay');
 const adVideo = document.getElementById('adVideo');
 
-const adIntervalSec = 10*60; // 10 minutos
-let nextAdTime = adIntervalSec;
+const adInterval = 10*60; // 10 minutos en segundos
+let nextAdTime = adInterval;
 let adPlaying = false;
+let userInteracted = false;
 
 // Mostrar burbuja de regresar al tocar
 let hideTimeout;
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
+  userInteracted = true; // el usuario ha interactuado
   clearTimeout(hideTimeout);
   hideTimeout = setTimeout(()=>{
     backButton.style.display = 'none';
-  }, 3000);
+  }, 4000);
 });
 
-// Temporizador para anuncio
+// Cuando la película empiece a reproducirse, iniciar temporizador
 movie.addEventListener('play', ()=>{
-  if(!movie.adTimer){
+  if(!movie.adTimer && userInteracted){
     movie.adTimer = setInterval(()=>{
       if(!adPlaying && movie.currentTime >= nextAdTime){
         playAd();
-        nextAdTime += adIntervalSec;
+        nextAdTime += adInterval;
       }
     }, 1000);
   }
 });
 
+// Función de mostrar anuncio
 function playAd(){
   adPlaying = true;
   movie.pause();
   adOverlay.style.display = 'flex';
   adVideo.currentTime = 0;
   adVideo.muted = false;
-  adVideo.play().catch(()=>{});
+  
+  // Reproducir anuncio
+  const playPromise = adVideo.play();
+  if(playPromise !== undefined){
+    playPromise.catch(() => {
+      // si falla, dejar muted para que pueda iniciar
+      adVideo.muted = true;
+      adVideo.play().catch(()=>{});
+    });
+  }
 }
 
-// Al terminar anuncio, volver a película
+// Cuando termine anuncio, volver a la película
 adVideo.addEventListener('ended', ()=>{
   adOverlay.style.display='none';
   adPlaying=false;
   movie.play().catch(()=>{});
 });
+
+// Ajustar video a pantalla
+function adjustVideoSize(){
+  movie.style.width = window.innerWidth + "px";
+  movie.style.height = window.innerHeight + "px";
+  adVideo.style.width = window.innerWidth + "px";
+  adVideo.style.height = window.innerHeight + "px";
+}
+window.addEventListener('resize', adjustVideoSize);
+window.addEventListener('orientationchange', adjustVideoSize);
+adjustVideoSize();
 </script>
+
 </body>
 </html>
 
