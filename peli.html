@@ -2,130 +2,117 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ver Película</title>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      background: black;
-      color: white;
-      height: 100%;
-      overflow: hidden;
-    }
-    video {
-      width: 100%;
-      height: 100%;
-      background: black;
-    }
-    /* Burbuja de regresar */
-    #backBubble {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: rgba(0,0,0,0.7);
-      padding: 10px 15px;
-      border-radius: 50%;
-      font-size: 20px;
-      color: white;
-      cursor: pointer;
-      display: none;
-      z-index: 1000;
-      transition: opacity 0.3s ease;
-    }
-    /* Overlay anuncio */
-    #adOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: black;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-      flex-direction: column;
-    }
-    #adVideo {
-      width: 100%;
-      height: 100%;
-      background: black;
-    }
-    #adText {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 18px;
-      background: rgba(0,0,0,0.6);
-      padding: 5px 10px;
-      border-radius: 8px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LA PELI DE LA SEMANA</title>
+<style>
+  body {
+    margin:0; padding:0;
+    background:#000;
+    overflow:hidden;
+  }
+  video {
+    width:100vw;
+    height:100vh;
+    object-fit:contain;
+    background:#000;
+  }
+  #backButton {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    padding: 10px 15px;
+    font-size: 18px;
+    cursor: pointer;
+    display: none;
+    z-index: 1000;
+  }
+  #adOverlay {
+    position: fixed;
+    top:0; left:0;
+    width:100vw; height:100vh;
+    background:black;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:999;
+  }
+  #adOverlay video {
+    width:100%; height:100%;
+    object-fit:contain;
+  }
+</style>
 </head>
 <body>
-  <!-- Burbuja regresar -->
-  <div id="backBubble" onclick="window.location.href='index.html'">⟵</div>
-
-  <!-- Reproductor principal -->
-  <video id="movie" controls autoplay>
+  <!-- Película principal -->
+  <video id="movie" playsinline webkit-playsinline controls>
     <source src="https://ia800802.us.archive.org/5/items/idiocracia-2006-brrip-m-720p-x-264-ac-3-es/Idiocracia%20%282006%29%20%5BBRrip%20m720p%20x264%20AC3%28ES%29%5D.mp4" type="video/mp4">
     Tu navegador no soporta el video.
   </video>
 
+  <!-- Botón de regresar -->
+  <button id="backButton" onclick="window.location.href='index.html'">⟵</button>
+
   <!-- Overlay anuncio -->
   <div id="adOverlay">
-    <div id="adText">Anuncio</div>
-    <video id="adVideo" autoplay>
+    <video id="adVideo" playsinline webkit-playsinline muted>
       <source src="https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4" type="video/mp4">
-      Tu navegador no soporta el video.
+      Tu navegador no soporta el video de anuncio.
     </video>
   </div>
 
-  <script>
-    const movie = document.getElementById("movie");
-    const backBubble = document.getElementById("backBubble");
-    const adOverlay = document.getElementById("adOverlay");
-    const adVideo = document.getElementById("adVideo");
+<script>
+const movie = document.getElementById('movie');
+const backButton = document.getElementById('backButton');
+const adOverlay = document.getElementById('adOverlay');
+const adVideo = document.getElementById('adVideo');
 
-    let adInterval = 10 * 60; // 10 minutos en segundos
-    let nextAdTime = adInterval;
+const adIntervalSec = 10*60; // 10 minutos
+let nextAdTime = adIntervalSec;
+let adPlaying = false;
 
-    // Mostrar burbuja al tocar pantalla
-    let hideTimeout;
-    document.addEventListener("click", () => {
-      backBubble.style.display = "block";
-      backBubble.style.opacity = "1";
-      clearTimeout(hideTimeout);
-      hideTimeout = setTimeout(() => {
-        backBubble.style.opacity = "0";
-        setTimeout(() => backBubble.style.display = "none", 300);
-      }, 3000);
-    });
+// Mostrar burbuja de regresar al tocar
+let hideTimeout;
+document.addEventListener('click', () => {
+  backButton.style.display = 'block';
+  clearTimeout(hideTimeout);
+  hideTimeout = setTimeout(()=>{
+    backButton.style.display = 'none';
+  }, 3000);
+});
 
-    // Revisar tiempo de película
-    movie.addEventListener("timeupdate", () => {
-      if (movie.currentTime >= nextAdTime) {
-        showAd();
-        nextAdTime += adInterval; // siguiente anuncio
+// Temporizador para anuncio
+movie.addEventListener('play', ()=>{
+  if(!movie.adTimer){
+    movie.adTimer = setInterval(()=>{
+      if(!adPlaying && movie.currentTime >= nextAdTime){
+        playAd();
+        nextAdTime += adIntervalSec;
       }
-    });
+    }, 1000);
+  }
+});
 
-    function showAd() {
-      movie.pause();
-      adOverlay.style.display = "flex";
-      adVideo.currentTime = 0;
-      adVideo.play();
-    }
+function playAd(){
+  adPlaying = true;
+  movie.pause();
+  adOverlay.style.display = 'flex';
+  adVideo.currentTime = 0;
+  adVideo.muted = false;
+  adVideo.play().catch(()=>{});
+}
 
-    // Cuando termine el anuncio, seguir película
-    adVideo.addEventListener("ended", () => {
-      adOverlay.style.display = "none";
-      movie.play();
-    });
-  </script>
+// Al terminar anuncio, volver a película
+adVideo.addEventListener('ended', ()=>{
+  adOverlay.style.display='none';
+  adPlaying=false;
+  movie.play().catch(()=>{});
+});
+</script>
 </body>
 </html>
 
