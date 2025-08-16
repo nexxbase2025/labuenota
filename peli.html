@@ -2,160 +2,139 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>LA PELI DE LA SEMANA</title>
-<style>
-  body {
-    margin:0; padding:0;
-    background:#000;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    overflow:hidden;
-  }
-  #video-container {
-    position: relative;
-    width: 100%;
-    max-width: 900px;
-  }
-  video {
-    width: 100%;
-    height: auto;
-    display:block;
-    background:#000;
-  }
-  #ad-video {
-    position: absolute;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    display:none;
-    z-index:10;
-    background:#000;
-  }
-  #back-btn {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    padding: 10px 18px;
-    background: #ff6a00cc;
-    color: white;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    z-index: 9999;
-    display: none;
-    opacity: 0.9;
-    transition: opacity 0.3s;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ver Película</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      background: black;
+      color: white;
+      height: 100%;
+      overflow: hidden;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      background: black;
+    }
+    /* Burbuja de regresar */
+    #backBubble {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.7);
+      padding: 10px 15px;
+      border-radius: 50%;
+      font-size: 20px;
+      color: white;
+      cursor: pointer;
+      display: none;
+      z-index: 1000;
+      transition: opacity 0.3s ease;
+    }
+    /* Overlay anuncio */
+    #adOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      flex-direction: column;
+    }
+    #adVideo {
+      width: 100%;
+      height: 100%;
+      background: black;
+    }
+    #adText {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      background: rgba(0,0,0,0.6);
+      padding: 5px 10px;
+      border-radius: 8px;
+    }
+  </style>
 </head>
 <body>
-<div id="video-container">
-  <video id="main-video" controls playsinline>
+  <!-- Burbuja regresar -->
+  <div id="backBubble" onclick="window.location.href='index.html'">⟵</div>
+
+  <!-- Reproductor principal -->
+  <video id="movie" controls autoplay>
     <source src="https://ia800802.us.archive.org/5/items/idiocracia-2006-brrip-m-720p-x-264-ac-3-es/Idiocracia%20%282006%29%20%5BBRrip%20m720p%20x264%20AC3%28ES%29%5D.mp4" type="video/mp4">
-    Tu navegador no soporta HTML5 video.
+    Tu navegador no soporta el video.
   </video>
-  <video id="ad-video" playsinline muted></video>
-</div>
 
-<button id="back-btn">⬅ Regresar</button>
+  <!-- Overlay anuncio -->
+  <div id="adOverlay">
+    <div id="adText">Anuncio</div>
+    <video id="adVideo" autoplay>
+      <source src="https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4" type="video/mp4">
+      Tu navegador no soporta el video.
+    </video>
+  </div>
 
-<script>
-const mainVideo = document.getElementById('main-video');
-const adVideo = document.getElementById('ad-video');
-const backBtn = document.getElementById('back-btn');
+  <script>
+    const movie = document.getElementById("movie");
+    const backBubble = document.getElementById("backBubble");
+    const adOverlay = document.getElementById("adOverlay");
+    const adVideo = document.getElementById("adVideo");
 
-// Configuración de anuncios
-const adInterval = 10 * 60; // cada 10 minutos
-const adVideoSrc = "https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4";
-let nextAdTime = adInterval;
-let adPlaying = false;
+    let adInterval = 10 * 60; // 10 minutos en segundos
+    let nextAdTime = adInterval;
 
-// Radio del index.html
-let radioAudio = null;
-try { radioAudio = window.opener.document.getElementById('audio'); } catch(e){}
+    // Mostrar burbuja al tocar pantalla
+    let hideTimeout;
+    document.addEventListener("click", () => {
+      backBubble.style.display = "block";
+      backBubble.style.opacity = "1";
+      clearTimeout(hideTimeout);
+      hideTimeout = setTimeout(() => {
+        backBubble.style.opacity = "0";
+        setTimeout(() => backBubble.style.display = "none", 300);
+      }, 3000);
+    });
 
-// Mostrar botón 3 seg al tocar pantalla
-let backBtnTimeout;
-function showBackButtonTemp(){
-  backBtn.style.display = 'block';
-  clearTimeout(backBtnTimeout);
-  backBtnTimeout = setTimeout(()=>{ backBtn.style.display = 'none'; }, 3000);
-}
-document.addEventListener('click', showBackButtonTemp);
-document.addEventListener('touchstart', showBackButtonTemp);
+    // Revisar tiempo de película
+    movie.addEventListener("timeupdate", () => {
+      if (movie.currentTime >= nextAdTime) {
+        showAd();
+        nextAdTime += adInterval; // siguiente anuncio
+      }
+    });
 
-// Botón regresar funcional
-backBtn.addEventListener('click', () => { 
-  window.location.href = 'index.html';
-});
-
-// Manejo de anuncios
-mainVideo.addEventListener('timeupdate', () => {
-  if(!adPlaying && mainVideo.currentTime >= nextAdTime){
-    playAd();
-  }
-});
-
-function playAd(){
-  adPlaying = true;
-
-  mainVideo.pause();
-
-  // Pausar radio
-  if(radioAudio && !radioAudio.paused){
-    radioAudio.pause();
-    radioAudio.wasPlaying = true;
-  } else if(radioAudio){
-    radioAudio.wasPlaying = false;
-  }
-
-  adVideo.src = adVideoSrc;
-  adVideo.controls = false;
-  adVideo.style.display = 'block';
-  adVideo.muted = false; // sonido
-  adVideo.play().catch(()=>{});
-
-  adVideo.onended = () => {
-    adVideo.style.display = 'none';
-    adVideo.src = '';
-    adPlaying = false;
-
-    mainVideo.play();
-    if(radioAudio && radioAudio.wasPlaying){
-      radioAudio.play().catch(()=>{});
+    function showAd() {
+      movie.pause();
+      adOverlay.style.display = "flex";
+      adVideo.currentTime = 0;
+      adVideo.play();
     }
 
-    nextAdTime += adInterval;
-  };
-}
-
-// Pausar radio al iniciar película
-mainVideo.addEventListener('play', () => {
-  if(radioAudio && !adPlaying && !radioAudio.paused){
-    radioAudio.pause();
-    radioAudio.wasPlaying = true;
-  }
-});
-
-// Reanudar radio al pausar película si no hay anuncio
-mainVideo.addEventListener('pause', () => {
-  if(radioAudio && !adPlaying && radioAudio.wasPlaying){
-    radioAudio.play().catch(()=>{});
-  }
-});
-
-// iOS / Android playsinline compat
-mainVideo.addEventListener('webkitbeginfullscreen', () => { mainVideo.pause(); });
-adVideo.addEventListener('webkitbeginfullscreen', () => { adVideo.pause(); });
-</script>
+    // Cuando termine el anuncio, seguir película
+    adVideo.addEventListener("ended", () => {
+      adOverlay.style.display = "none";
+      movie.play();
+    });
+  </script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 

@@ -26,8 +26,6 @@
     width: 200px;
     z-index: 9999;
   }
-
-  /* Galería deslizable */
   .gallery-scroll {
     position: fixed;
     bottom: 150px;
@@ -62,8 +60,6 @@
     display: block;
     border-radius: 12px;
   }
-
-  /* Redes sociales - burbujas */
   .social-row-abajo {
     position: fixed;
     bottom: 80px;
@@ -71,7 +67,7 @@
     transform: translateX(-50%);
     display: flex;
     gap: 15px;
-    z-index: 10000;
+    z-index: 10001;
   }
   .social-row-abajo a {
     background: #fff;
@@ -90,8 +86,6 @@
     width: 26px;
     height: 26px;
   }
-
-  /* Reproductor radio */
   .radio-player {
     position: fixed;
     bottom: 20px;
@@ -121,9 +115,7 @@
     align-items: center;
     user-select: none;
   }
-  .play-btn:focus {
-    outline: 2px solid #fff;
-  }
+  .play-btn:focus { outline: 2px solid #fff; }
   .spectrum {
     display: flex;
     justify-content: center;
@@ -135,14 +127,8 @@
     margin-top: 10px;
     z-index: 999;
   }
-  .bar {
-    width: 4px;
-    background: lime;
-    animation: bounce 1s infinite ease-in-out;
-    transition: height 0.1s ease;
-  }
+  .bar { width: 4px; background: lime; animation: bounce 1s infinite ease-in-out; transition: height 0.1s ease; }
 
-  /* Burbuja instalar Android */
   #install-bubble {
     display: none;
     position: fixed;
@@ -158,8 +144,6 @@
     box-shadow: 0 0 15px #ff6a00cc;
     z-index: 99999;
   }
-
-  /* Burbuja aviso iOS */
   #ios-install-prompt {
     position: fixed;
     bottom: 20px;
@@ -185,11 +169,9 @@
     cursor: pointer;
     font-weight: bold;
   }
-
-  /* Burbuja peli */
   #peli-bubble {
     position: fixed;
-    bottom: 230px; /* encima de la galería */
+    bottom: 230px;
     left: 50%;
     transform: translateX(-50%);
     background: #ff6a00;
@@ -200,194 +182,123 @@
     font-size: 15px;
     cursor: pointer;
     box-shadow: 0 0 15px #ff6a00cc;
-    z-index: 10001; /* encima de la galería pero debajo de social/red player */
+    z-index: 10002;
     text-align: center;
-  }
-
-  @keyframes fadeIn {
-    from {opacity: 0; transform: translateX(-50%) translateY(10px);}
-    to {opacity: 1; transform: translateX(-50%) translateY(0);}
   }
 </style>
 </head>
 <body>
 
-  <!-- Logo arriba -->
-  <img src="ivibra.webp" id="logo" alt="Logo Ivibra" />
+<img src="ivibra.webp" id="logo" alt="Logo Ivibra" />
+<div id="peli-bubble">🎬 LA PELI DE LA SEMANA</div>
 
-  <!-- Burbuja LA PELI DE LA SEMANA -->
-  <div id="peli-bubble" onclick="window.location.href='peli.html'">🎬 LA PELI DE LA SEMANA</div>
+<nav class="social-row-abajo" aria-label="Redes sociales">
+  <a href="https://wa.me/14699822453" target="_blank" rel="noopener"><img src="what.webp" alt="WhatsApp" /></a>
+  <a href="https://www.facebook.com/radiomaxsda" target="_blank" rel="noopener"><img src="face.webp" alt="Facebook" /></a>
+  <a href="https://www.instagram.com/guillermo_villagran_delgado/reel/DGLaDCZJuHX/" target="_blank" rel="noopener"><img src="ins.webp" alt="Instagram" /></a>
+  <a href="https://www.tiktok.com/@radiomaxsoloexitos" target="_blank" rel="noopener"><img src="tik.webp" alt="TikTok" /></a>
+</nav>
 
-  <!-- Redes sociales -->
-  <nav class="social-row-abajo" aria-label="Redes sociales">
-    <a href="https://wa.me/14699822453" target="_blank" rel="noopener" aria-label="WhatsApp">
-      <img src="what.webp" alt="WhatsApp" />
-    </a>
-    <a href="https://www.facebook.com/radiomaxsda" target="_blank" rel="noopener" aria-label="Facebook">
-      <img src="face.webp" alt="Facebook" />
-    </a>
-    <a href="https://www.instagram.com/guillermo_villagran_delgado/reel/DGLaDCZJuHX/" target="_blank" rel="noopener" aria-label="Instagram">
-      <img src="ins.webp" alt="Instagram" />
-    </a>
-    <a href="https://www.tiktok.com/@radiomaxsoloexitos" target="_blank" rel="noopener" aria-label="TikTok">
-      <img src="tik.webp" alt="TikTok" />
-    </a>
-  </nav>
+<div class="gallery-scroll">
+  <div class="gallery-item"><img src="r1.webp" alt="Promo 1" /></div>
+  <div class="gallery-item"><img src="r2.webp" alt="Promo 2" /></div>
+  <div class="gallery-item"><img src="r3.webp" alt="Promo 3" /></div>
+  <div class="gallery-item"><img src="r4.webp" alt="Promo 4" /></div>
+  <div class="gallery-item"><img src="r5.webp" alt="Promo 5" /></div>
+  <div class="gallery-item"><img src="r6.webp" alt="Promo 6" /></div>
+</div>
 
-  <!-- Galería deslizable -->
-  <div class="gallery-scroll" aria-label="Galería de promociones">
-    <div class="gallery-item"><img src="r1.webp" alt="Promo 1" /></div>
-    <div class="gallery-item"><img src="r2.webp" alt="Promo 2" /></div>
-    <div class="gallery-item"><img src="r3.webp" alt="Promo 3" /></div>
-    <div class="gallery-item"><img src="r4.webp" alt="Promo 4" /></div>
-    <div class="gallery-item"><img src="r5.webp" alt="Promo 5" /></div>
-    <div class="gallery-item"><img src="r6.webp" alt="Promo 6" /></div>
-  </div>
+<div class="radio-player">
+  <button class="play-btn" id="playPauseBtn">▶</button>
+  <div class="spectrum" id="spectrum"></div>
+</div>
 
-  <!-- Reproductor -->
-  <div class="radio-player" role="region" aria-label="Control de reproducción de radio">
-    <button class="play-btn" id="playPauseBtn" aria-label="Reproducir o pausar radio">▶</button>
-    <div class="spectrum" id="spectrum" aria-hidden="true"></div>
-  </div>
+<audio id="audio" preload="auto" src="https://stream.zeno.fm/yv4pxfcq6igvv"></audio>
 
-  <audio id="audio" preload="auto" src="https://stream.zeno.fm/yv4pxfcq6igvv"></audio>
-
-  <!-- Burbuja instalar Android -->
-  <div id="install-bubble" role="button" tabindex="0" aria-label="Instalar aplicación">📲 Instalar app</div>
-
-  <!-- Burbuja aviso instalación iOS -->
-  <div id="ios-install-prompt" role="alert" aria-live="assertive" aria-atomic="true">
-    📲 Para instalar esta app en iPhone, pulsa el botón de <strong>Compartir</strong> y luego <strong>Añadir a pantalla de inicio</strong>.
-    <br />
-    <button id="closeIosPromptBtn" aria-label="Cerrar aviso de instalación iOS">Cerrar</button>
-  </div>
+<div id="install-bubble">📲 Instalar app</div>
+<div id="ios-install-prompt">
+  📲 Para instalar esta app en iPhone, pulsa <strong>Compartir</strong> → <strong>Añadir a pantalla de inicio</strong>.
+  <br /><button id="closeIosPromptBtn">Cerrar</button>
+</div>
 
 <script>
-  const audio = document.getElementById('audio');
-  const playPauseBtn = document.getElementById('playPauseBtn');
-  const spectrum = document.getElementById('spectrum');
-  const installBubble = document.getElementById('install-bubble');
-  const iosInstallPrompt = document.getElementById('ios-install-prompt');
-  const closeIosPromptBtn = document.getElementById('closeIosPromptBtn');
+const audio = document.getElementById('audio');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const spectrum = document.getElementById('spectrum');
+const installBubble = document.getElementById('install-bubble');
+const iosInstallPrompt = document.getElementById('ios-install-prompt');
+const closeIosPromptBtn = document.getElementById('closeIosPromptBtn');
+const peliBubble = document.getElementById('peli-bubble');
 
-  let isPlaying = false;
-  let animationId;
-  let deferredPrompt;
+let isPlaying = false;
+let animationId;
+let deferredPrompt;
+let peliWindow = null;
 
-  // Crear barras espectro
-  const bars = [];
-  for(let i=0; i<16; i++){
-    const bar = document.createElement('div');
-    bar.className = 'bar';
-    spectrum.appendChild(bar);
-    bars.push(bar);
+// Crear barras espectro
+const bars = [];
+for(let i=0; i<16; i++){
+  const bar = document.createElement('div');
+  bar.className = 'bar';
+  spectrum.appendChild(bar);
+  bars.push(bar);
+}
+function animateFakeSpectrum(){
+  bars.forEach(bar => {
+    bar.style.height = `${Math.random()*100}%`;
+  });
+  const logo = document.getElementById('logo');
+  if(logo) logo.style.transform = `translateX(-50%) scale(${1+Math.random()*0.1})`;
+  animationId = requestAnimationFrame(animateFakeSpectrum);
+}
+
+// Play/Pause radio
+playPauseBtn.addEventListener('click', () => {
+  if(!isPlaying){
+    audio.play().then(()=>{ playPauseBtn.textContent='⏸'; isPlaying=true; animateFakeSpectrum(); });
+  } else {
+    audio.pause(); playPauseBtn.textContent='▶'; isPlaying=false; cancelAnimationFrame(animationId);
   }
-
-  function animateFakeSpectrum(){
-    bars.forEach(bar => {
-      const h = Math.random() * 100;
-      bar.style.height = `${h}%`;
-    });
-    const scale = 1 + Math.random() * 0.1;
-    const logo = document.getElementById('logo');
-    if(logo){
-      logo.style.transform = `translateX(-50%) scale(${scale})`;
-    }
-    animationId = requestAnimationFrame(animateFakeSpectrum);
+});
+// iOS primer toque
+document.addEventListener('touchstart', ()=>{ audio.load(); }, {once:true});
+// Visibilidad
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && isPlaying){
+    audio.pause(); audio.load(); audio.play().catch(()=>{});
   }
+});
+// Android instal
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault(); deferredPrompt=e; installBubble.style.display='block';
+});
+installBubble.addEventListener('click', async ()=>{
+  installBubble.style.display='none';
+  if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }
+});
+// iOS instal
+function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+function isInStandaloneMode(){ return ('standalone' in window.navigator)&&window.navigator.standalone; }
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(isIos()&&!isInStandaloneMode()&&!localStorage.getItem('iosPromptShown')) iosInstallPrompt.style.display='block';
+});
+closeIosPromptBtn.addEventListener('click', ()=>{
+  iosInstallPrompt.style.display='none';
+  localStorage.setItem('iosPromptShown','true');
+});
 
-  playPauseBtn.addEventListener('click', () => {
-    if(!isPlaying){
-      audio.manualPaused = false;
-      audio.pause();
-      audio.src = 'https://stream.zeno.fm/yv4pxfcq6igvv';
-      audio.load();
-      audio.play().then(() => {
-        playPauseBtn.textContent = '⏸';
-        isPlaying = true;
-        animateFakeSpectrum();
-      }).catch(err => console.error('Error al reproducir:', err));
-    } else {
-      audio.manualPaused = true;
-      audio.pause();
-      playPauseBtn.textContent = '▶';
-      cancelAnimationFrame(animationId);
-      isPlaying = false;
-      const logo = document.getElementById('logo');
-      if(logo) logo.style.transform = 'translateX(-50%) scale(1)';
-    }
-  });
-
-  // iOS: Forzar carga audio en primer toque
-  document.addEventListener('touchstart', () => { audio.load(); }, { once: true });
-
-  // Manejo visibilidad
-  document.addEventListener('visibilitychange', () => {
-    if(document.visibilityState === 'visible' && isPlaying){
-      audio.pause();
-      audio.src = '';
-      audio.load();
-      audio.src = 'https://stream.zeno.fm/yv4pxfcq6igvv';
-      audio.play().catch(err => console.error('Error al reanudar el stream:', err));
-    }
-  });
-
-  audio.addEventListener('stalled', () => {
-    setTimeout(() => {
-      if(audio.readyState < 3){
-        audio.pause();
-        audio.src = '';
-        audio.load();
-        audio.src = 'https://stream.zeno.fm/yv4pxfcq6igvv';
-        audio.play().catch(err => console.error('Error al reconectar:', err));
-      }
-    }, 3000);
-  });
-
-  audio.manualPaused = false;
-  audio.addEventListener('pause', () => {
-    if (isPlaying && !audio.manualPaused) {
-      setTimeout(() => {
-        audio.play().catch(err => console.warn('No se pudo reanudar audio automáticamente:', err));
-      }, 500);
-    }
-  });
-
-  // Burbuja Android
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBubble.style.display = 'block';
-  });
-  installBubble.addEventListener('click', async () => {
-    installBubble.style.display = 'none';
-    if(deferredPrompt){
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-    }
-  });
-
-  // Service Worker
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('service-worker.js')
-      .then(() => console.log('Service Worker registrado'))
-      .catch(e => console.error('Error registro Service Worker:', e));
-  }
-
-  // iOS
-  function isIos() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
-  function isInStandaloneMode() { return ('standalone' in window.navigator) && window.navigator.standalone; }
-  document.addEventListener('DOMContentLoaded', () => {
-    if(isIos() && !isInStandaloneMode() && !localStorage.getItem('iosPromptShown')) {
-      iosInstallPrompt.style.display = 'block';
-    }
-  });
-  closeIosPromptBtn.addEventListener('click', () => {
-    iosInstallPrompt.style.display = 'none';
-    localStorage.setItem('iosPromptShown', 'true');
-  });
+// PELI
+peliBubble.addEventListener('click', ()=>{
+  if(isPlaying){ audio.pause(); cancelAnimationFrame(animationId); }
+  peliWindow = window.open('peli.html','_blank','width='+screen.width+',height='+screen.height+',fullscreen=yes');
+  // Recibir mensaje de peli.html
+  window.addEventListener('message', (e)=>{
+    if(e.data==='resumeRadio'){ audio.play().then(()=>{ playPauseBtn.textContent='⏸'; isPlaying=true; animateFakeSpectrum(); }) }
+  }, {once:true});
+});
 </script>
 </body>
 </html>
+
+
 
