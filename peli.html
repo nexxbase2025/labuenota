@@ -60,7 +60,7 @@
 
 <!-- Overlay anuncio -->
 <div id="adOverlay">
-  <video id="adVideo" playsinline webkit-playsinline muted>
+  <video id="adVideo" playsinline webkit-playsinline>
     <source src="https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4" type="video/mp4">
     Tu navegador no soporta el video de anuncio.
   </video>
@@ -72,7 +72,7 @@ const backButton = document.getElementById('backButton');
 const adOverlay = document.getElementById('adOverlay');
 const adVideo = document.getElementById('adVideo');
 
-const adInterval = 10*60; // 10 minutos en segundos
+const adInterval = 10*60; // 10 minutos
 let nextAdTime = adInterval;
 let adPlaying = false;
 let userInteracted = false;
@@ -81,7 +81,7 @@ let userInteracted = false;
 let hideTimeout;
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
-  userInteracted = true; // el usuario ha interactuado
+  userInteracted = true;
   clearTimeout(hideTimeout);
   hideTimeout = setTimeout(()=>{
     backButton.style.display = 'none';
@@ -90,7 +90,7 @@ document.addEventListener('click', () => {
 
 // Cuando la película empiece a reproducirse, iniciar temporizador
 movie.addEventListener('play', ()=>{
-  if(!movie.adTimer && userInteracted){
+  if(!movie.adTimer){
     movie.adTimer = setInterval(()=>{
       if(!adPlaying && movie.currentTime >= nextAdTime){
         playAd();
@@ -106,25 +106,23 @@ function playAd(){
   movie.pause();
   adOverlay.style.display = 'flex';
   adVideo.currentTime = 0;
-  adVideo.muted = false;
-  
-  // Reproducir anuncio
+
   const playPromise = adVideo.play();
   if(playPromise !== undefined){
     playPromise.catch(() => {
-      // si falla, dejar muted para que pueda iniciar
       adVideo.muted = true;
       adVideo.play().catch(()=>{});
     });
   }
-}
 
-// Cuando termine anuncio, volver a la película
-adVideo.addEventListener('ended', ()=>{
-  adOverlay.style.display='none';
-  adPlaying=false;
-  movie.play().catch(()=>{});
-});
+  // Cuando termina el anuncio
+  adVideo.onended = () => {
+    adOverlay.style.display = 'none';
+    adPlaying = false;
+    adVideo.muted = false;
+    movie.play().catch(()=>{});
+  };
+}
 
 // Ajustar video a pantalla
 function adjustVideoSize(){
