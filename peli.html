@@ -51,7 +51,7 @@ const movie = document.getElementById('movie');
 const backButton = document.getElementById('backButton');
 const activateSound = document.getElementById('activateSound');
 
-const adInterval = 10*60; // 10 minutos
+const adInterval = 10*60; // 10 minutos en segundos
 let nextAdTime = adInterval;
 let adPlaying = false;
 let hideTimeout;
@@ -59,7 +59,7 @@ let hideTimeout;
 // Detect Android
 const isAndroid = /Android/i.test(navigator.userAgent);
 
-// Mostrar botón regresar al tocar
+// Mostrar botón regresar
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
   clearTimeout(hideTimeout);
@@ -67,7 +67,7 @@ document.addEventListener('click', () => {
 });
 backButton.addEventListener('click', ()=>{ window.location.href='index.html'; });
 
-// Ajuste tamaño ante rotación/cambios
+// Ajuste de tamaño
 function adjustVideoSize(){
   movie.style.width = window.innerWidth + "px";
   movie.style.height = window.innerHeight + "px";
@@ -76,7 +76,7 @@ window.addEventListener('resize', adjustVideoSize);
 window.addEventListener('orientationchange', adjustVideoSize);
 adjustVideoSize();
 
-// ---- Temporizador para anuncio cada 10 min ----
+// Temporizador para anuncios cada 10 minutos
 movie.addEventListener('timeupdate', () => {
   if(!adPlaying && movie.currentTime >= nextAdTime){
     nextAdTime += adInterval;
@@ -84,55 +84,58 @@ movie.addEventListener('timeupdate', () => {
   }
 });
 
-// ---- Función para reproducir anuncio en Android ----
+// Función reproducir anuncio
 async function playAd(){
-  if(!isAndroid) return; // iPhone no se toca
   adPlaying = true;
   movie.pause();
 
-  // Crear video de anuncio dinámico
-  const adVideo = document.createElement('video');
-  adVideo.src = "https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4";
-  adVideo.playsInline = true;
-  adVideo.webkitPlaysInline = true;
-  adVideo.muted = true; // autoplay seguro en Android
-  adVideo.style.background = 'black';
-  adVideo.style.width = '100%';
-  adVideo.style.height = '100%';
+  const originalSrc = movie.querySelector('source').src;
+  const originalType = movie.querySelector('source').type;
 
-  // Botón activar sonido
-  activateSound.style.display = 'block';
+  // Cambiar video a anuncio
+  movie.src = "https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4";
+  movie.querySelector('source').type = "video/mp4";
+  movie.load();
+
+  // Android: autoplay seguro en mute
+  if(isAndroid){
+    movie.muted = true;
+    try{ await movie.play(); } catch(e){
+      activateSound.style.display = 'block';
+    }
+  } else {
+    // iPhone: simplemente reproducir
+    movie.muted = false;
+    movie.play().catch(()=>{});
+  }
+
+  // Botón activar sonido si autoplay falla
+  activateSound.style.display = 'none';
   activateSound.onclick = () => {
-    adVideo.muted = false;
-    adVideo.play().catch(()=>{});
+    movie.muted = false;
+    movie.play().catch(()=>{});
     activateSound.style.display = 'none';
   };
 
-  // Poner fullscreen
-  document.body.appendChild(adVideo);
-  try{
-    await adVideo.requestFullscreen();
-    await adVideo.play();
-  } catch(e){
-    console.log("Error autoplay anuncio:", e);
-  }
-
-  // Cuando termina anuncio
-  adVideo.addEventListener('ended', async ()=>{
+  // Al terminar el anuncio, volver a la película
+  const onAdEnded = () => {
+    movie.removeEventListener('ended', onAdEnded);
+    movie.src = originalSrc;
+    movie.querySelector('source').type = originalType;
+    movie.load();
+    movie.muted = false;
+    movie.play().catch(()=>{});
     adPlaying = false;
     activateSound.style.display = 'none';
-    try{
-      await document.exitFullscreen();
-    } catch(e){}
-    adVideo.remove();
-    movie.play().catch(()=>{});
-  });
+  };
+  movie.addEventListener('ended', onAdEnded);
 }
 
 // Primer toque desbloquea audio en iOS/Android
 document.addEventListener('touchstart', ()=>{
   movie.load();
 }, {once:true});
+
 </script>
 
 </body>
