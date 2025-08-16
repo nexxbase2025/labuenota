@@ -36,6 +36,12 @@
     width:100%; height:100%;
     object-fit:contain;
   }
+  /* Mensaje sutil para Android cuando el anuncio requiere toque */
+  #tapHint {
+    position:absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    padding: 8px 12px; font-size: 14px; border-radius: 999px;
+    background: rgba(0,0,0,0.6); color:#fff; display:none;
+  }
 </style>
 </head>
 <body>
@@ -52,6 +58,7 @@
     <source src="https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4" type="video/mp4">
     Tu navegador no soporta el video de anuncio.
   </video>
+  <div id="tapHint">Toca para reproducir el anuncio</div>
 </div>
 
 <script>
@@ -59,6 +66,7 @@ const movie = document.getElementById('movie');
 const backButton = document.getElementById('backButton');
 const adOverlay = document.getElementById('adOverlay');
 const adVideo = document.getElementById('adVideo');
+const tapHint = document.getElementById('tapHint');
 
 const adInterval = 10*60; // 10 minutos
 let nextAdTime = adInterval;
@@ -69,80 +77,97 @@ let hideTimeout;
 // Detect Android
 const isAndroid = /Android/i.test(navigator.userAgent);
 
-// Mostrar burbuja al tocar
+// Mostrar burbuja de regresar al tocar (y marcar interacción de usuario)
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
   userInteracted = true;
   clearTimeout(hideTimeout);
   hideTimeout = setTimeout(()=>{ backButton.style.display='none'; }, 4000);
 });
-
-// Botón regresar
 backButton.addEventListener('click', ()=>{ window.location.href='index.html'; });
 
-// Ajustar tamaño
+// Ajuste de tamaño ante rotación/cambios (sin forzar fullscreen ni landscape)
 function adjustVideoSize(){
-  movie.style.width = window.innerWidth + "px";
-  movie.style.height = window.innerHeight + "px";
-  adVideo.style.width = window.innerWidth + "px";
-  adVideo.style.height = window.innerHeight + "px";
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  movie.style.width = w + "px";
+  movie.style.height = h + "px";
+  adVideo.style.width = w + "px";
+  adVideo.style.height = h + "px";
 }
 window.addEventListener('resize', adjustVideoSize);
 window.addEventListener('orientationchange', adjustVideoSize);
 adjustVideoSize();
 
-// --- 🔹 Control de anuncios con timeupdate ---
+// ---- Anuncios cada 10 min: usar timeupdate (más fiable en Android que setInterval) ----
 movie.addEventListener('timeupdate', () => {
-  if(!adPlaying && movie.currentTime >= nextAdTime){
+  if (!adPlaying && movie.currentTime >= nextAdTime) {
     playAd();
     nextAdTime += adInterval;
   }
 });
 
-// --- 🔹 Forzar landscape en Android ---
-movie.addEventListener('play', async () => {
-  if(isAndroid && movie.requestFullscreen){
-    try {
-      await movie.requestFullscreen();
-      if(screen.orientation && screen.orientation.lock){
-        await screen.orientation.lock("landscape").catch(()=>{});
-      }
-    } catch(e){}
-  }
-});
+// NO forzar fullscreen ni lock de orientación (solo Android): dejamos que gire al rotar
+// movie.addEventListener('play', ... )  --> Eliminado a petición
 
-// Función mostrar anuncio
+// ---- Reproducción del anuncio, robusto para Android ----
 function playAd(){
   adPlaying = true;
   movie.pause();
-  adOverlay.style.display='flex';
-  adVideo.currentTime = 0;
-  adVideo.muted = false;
+  adOverlay.style.display = 'flex';
+  tapHint.style.display = 'none';
 
-  const tryPlay = () => {
-    adVideo.play().catch(() => {
-      adVideo.muted = true;
-      adVideo.play().catch(()=>{});
-    });
+  // Preparar el video del anuncio desde el inicio
+  adVideo.pause();
+  try { adVideo.currentTime = 0; } catch(e) {}
+  // En Android, si no hubo interacción previa, arrancamos en mute para evitar bloqueo
+  adVideo.muted = isAndroid ? !userInteracted : false;
+  adVideo.load();
+
+  const startAd = () => {
+    adVideo.play()
+      .then(() => {
+        // Si inició bien y hubo interacción, intentamos habilitar audio
+        if (isAndroid && userInteracted && adVideo.muted) {
+          // intentar activar audio (algunas veces requiere un toque adicional)
+          adVideo.muted = false;
+          adVideo.play().catch(() => { /* si falla, se queda en mute */ });
+        }
+        // Opcional: ocultar controles si se habían mostrado como respaldo
+        if (isAndroid) adVideo.controls = false;
+        tapHint.style.display = 'none';
+      })
+      .catch(() => {
+        // Respaldo para Android: mostrar controles y pedir toque
+        if (isAndroid) {
+          adVideo.controls = true;
+          tapHint.style.display = 'block';
+        }
+      });
   };
 
-  // En Android, esperar interacción si aún no la hubo
-  if(isAndroid && !userInteracted){
-    const touchHandler = () => { tryPlay(); };
-    document.addEventListener('touchstart', touchHandler, {once:true});
-  } else {
-    tryPlay();
-  }
+  // Intento inmediato
+  startAd();
+
+  // Si Android sigue bloqueando, permitir toque directo sobre el overlay para iniciar con audio
+  const tapToPlay = () => {
+    userInteracted = true;
+    adVideo.muted = false; // intenta con audio tras el toque
+    startAd();
+  };
+  adOverlay.addEventListener('touchstart', tapToPlay, { once:true });
+  adOverlay.addEventListener('click', tapToPlay, { once:true });
 }
 
-// Cuando termina anuncio
+// Cuando termina el anuncio, volver a la película
 adVideo.addEventListener('ended', ()=>{
-  adOverlay.style.display='none';
+  adOverlay.style.display = 'none';
   adPlaying = false;
+  // Asegurar reanudación
   movie.play().catch(()=>{});
 });
 
-// Primer toque desbloquea audio en iOS/Android
+// Primer toque desbloquea audio en iOS/Android (mantengo tu comportamiento)
 document.addEventListener('touchstart', ()=>{
   movie.load();
   adVideo.load();
