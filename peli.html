@@ -60,7 +60,7 @@
     <source src="https://ia800802.us.archive.org/5/items/idiocracia-2006-brrip-m-720p-x-264-ac-3-es/Idiocracia%20%282006%29%20%5BBRrip%20m720p%20x264%20AC3%28ES%29%5D.mp4" type="video/mp4">
     Tu navegador no soporta HTML5 video.
   </video>
-  <video id="ad-video" playsinline></video>
+  <video id="ad-video" playsinline muted></video>
 </div>
 
 <button id="back-btn">⬅ Regresar</button>
@@ -76,23 +76,24 @@ const adVideoSrc = "https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo
 let nextAdTime = adInterval;
 let adPlaying = false;
 
-// Pausar radio (del index.html) durante video/anuncio
-const radioAudio = window.opener?.document.getElementById('audio') || null;
+// Radio del index.html
+let radioAudio = null;
+try { radioAudio = window.opener.document.getElementById('audio'); } catch(e){}
 
-// Función mostrar botón por 3 segundos
+// Mostrar botón 3 seg al tocar pantalla
 let backBtnTimeout;
 function showBackButtonTemp(){
   backBtn.style.display = 'block';
   clearTimeout(backBtnTimeout);
   backBtnTimeout = setTimeout(()=>{ backBtn.style.display = 'none'; }, 3000);
 }
-
-// Botón regresar
-backBtn.addEventListener('click', () => { window.close(); });
-
-// Mostrar botón al tocar pantalla
 document.addEventListener('click', showBackButtonTemp);
 document.addEventListener('touchstart', showBackButtonTemp);
+
+// Botón regresar funcional
+backBtn.addEventListener('click', () => { 
+  window.location.href = 'index.html';
+});
 
 // Manejo de anuncios
 mainVideo.addEventListener('timeupdate', () => {
@@ -117,6 +118,7 @@ function playAd(){
   adVideo.src = adVideoSrc;
   adVideo.controls = false;
   adVideo.style.display = 'block';
+  adVideo.muted = false; // sonido
   adVideo.play().catch(()=>{});
 
   adVideo.onended = () => {
@@ -124,7 +126,7 @@ function playAd(){
     adVideo.src = '';
     adPlaying = false;
 
-    mainVideo.play(); // reanudar película
+    mainVideo.play();
     if(radioAudio && radioAudio.wasPlaying){
       radioAudio.play().catch(()=>{});
     }
@@ -133,7 +135,7 @@ function playAd(){
   };
 }
 
-// Pausar radio al iniciar película si no hay anuncio
+// Pausar radio al iniciar película
 mainVideo.addEventListener('play', () => {
   if(radioAudio && !adPlaying && !radioAudio.paused){
     radioAudio.pause();
@@ -154,6 +156,7 @@ adVideo.addEventListener('webkitbeginfullscreen', () => { adVideo.pause(); });
 </script>
 </body>
 </html>
+
 
 
 
