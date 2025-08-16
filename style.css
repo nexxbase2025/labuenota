@@ -20,7 +20,7 @@ body {
 /* BURBUJA INSTALAR ANDROID */
 #install-bubble {
   position: fixed;
-  bottom: 80px;
+  bottom: 200px;
   right: 20px;
   background: #40a8f4;
   color: white;
@@ -183,9 +183,9 @@ body {
 }
 
 #logo {
-  width: 200px;
+  width: 250px;
   position: fixed;
-  top: 80px;
+  top: 70px;
   left: 50%;
   transform: translateX(-50%);
   transition: transform 0.1s ease;
