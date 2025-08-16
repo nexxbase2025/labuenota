@@ -40,16 +40,13 @@
 </head>
 <body>
 
-<!-- Película principal -->
 <video id="movie" controls playsinline webkit-playsinline>
   <source src="https://ia800802.us.archive.org/5/items/idiocracia-2006-brrip-m-720p-x-264-ac-3-es/Idiocracia%20%282006%29%20%5BBRrip%20m720p%20x264%20AC3%28ES%29%5D.mp4" type="video/mp4">
   Tu navegador no soporta el video.
 </video>
 
-<!-- Botón regresar -->
 <button id="backButton">⟵</button>
 
-<!-- Overlay anuncio -->
 <div id="adOverlay">
   <video id="adVideo" playsinline webkit-playsinline>
     <source src="https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4" type="video/mp4">
@@ -63,13 +60,16 @@ const backButton = document.getElementById('backButton');
 const adOverlay = document.getElementById('adOverlay');
 const adVideo = document.getElementById('adVideo');
 
-const adInterval = 10*60; // 10 minutos
+const adInterval = 10*60;
 let nextAdTime = adInterval;
 let adPlaying = false;
 let userInteracted = false;
+let hideTimeout;
+
+// Detect Android
+const isAndroid = /Android/i.test(navigator.userAgent);
 
 // Mostrar burbuja de regresar al tocar
-let hideTimeout;
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
   userInteracted = true;
@@ -77,7 +77,6 @@ document.addEventListener('click', () => {
   hideTimeout = setTimeout(()=>{ backButton.style.display='none'; }, 4000);
 });
 
-// Botón regresar
 backButton.addEventListener('click', ()=>{ window.location.href='index.html'; });
 
 // Ajuste videos
@@ -113,6 +112,15 @@ function playAd(){
   adOverlay.style.display='flex';
   adVideo.currentTime = 0;
   adVideo.muted = false;
+
+  // Forzar reproducción Android
+  if(isAndroid){
+    const touchHandler = () => {
+      adVideo.play().catch(()=>{ adVideo.muted=true; adVideo.play(); });
+      document.removeEventListener('touchstart', touchHandler);
+    };
+    document.addEventListener('touchstart', touchHandler, {once:true});
+  }
 
   const playPromise = adVideo.play();
   if(playPromise !== undefined){
