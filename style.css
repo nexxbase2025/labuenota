@@ -1,0 +1,193 @@
+
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* BODY Y FONDO */
+body {
+  margin: 0;
+  background: url('fondo1.webp') no-repeat center center fixed;
+  background-size: cover;
+  font-family: sans-serif;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* BURBUJA INSTALAR ANDROID */
+#install-bubble {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  background: #40a8f4;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10000;
+  user-select: none;
+  font-family: Arial, sans-serif;
+  transition: transform 0.3s ease;
+  display: none;
+}
+#install-bubble:hover {
+  background: #1f75d1;
+  transform: scale(1.05);
+}
+
+/* CUADRO INFO IOS */
+#iosInstallBanner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  z-index: 100000; /* por si acaso, más alto que todo */
+  display: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  text-align: center;
+}
+#iosInstallBanner button {
+  margin-top: 10px;
+  background: #25d366;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  font-size: 14px;
+}
+
+/* BOTONES REDES SOCIALES */
+.social-bubbles {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 9999;
+}
+
+.social-bubbles a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: float 3s ease-in-out infinite;
+}
+
+.social-bubbles a:hover {
+  transform: scale(1.15);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+.social-bubbles img {
+  width: 24px;
+  height: 24px;
+}
+
+/* ANIMACIÓN FLOTAR BOTONES */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* REPRODUCTOR */
+.radio-player {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(0,0,0,0.6);
+  padding: 10px 20px;
+  border-radius: 30px;
+  z-index: 9999;
+}
+
+.play-btn {
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+  background: #1e1e1e;
+  color: #fff;
+  font-size: 30px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+/* BARRAS DEL SPECTRUM */
+.spectrum {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 4px;
+  height: 40px;
+  width: 150px;
+  margin: auto;
+  margin-top: 10px;
+  z-index: 999;
+}
+
+.bar {
+  width: 4px;
+  background: lime;
+  animation: bounce 1s infinite ease-in-out;
+  transition: height 0.1s ease;
+}
+
+/* MEDIA QUERIES PARA MÓVILES PEQUEÑOS */
+@media (max-width: 400px) {
+  .play-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+  .spectrum {
+    height: 30px;
+  }
+  .bar {
+    width: 4px;
+  }
+  #install-bubble {
+    bottom: 60px;
+    right: 10px;
+    padding: 10px 15px;
+    font-size: 14px;
+  }
+}
+
+#logo {
+  width: 200px;
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: transform 0.1s ease;
+  z-index: 9999;
+}
