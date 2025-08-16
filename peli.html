@@ -6,31 +6,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>LA PELI DE LA SEMANA</title>
 <style>
-  body {
-    margin:0; padding:0;
-    background:black;
-    overflow:hidden;
-    touch-action: manipulation;
-  }
+  body {margin:0; padding:0; background:black; overflow:hidden;}
   video {
-    width:100vw;
-    height:100vh;
+    width:100vw; height:100vh;
     object-fit:contain;
     background:black;
   }
   #backButton {
     position: fixed;
-    top: 20px;
-    left: 20px;
+    top: 20px; left: 20px;
     background: rgba(0,0,0,0.6);
     color: #fff;
-    border: none;
-    border-radius: 50%;
-    padding: 10px 15px;
-    font-size: 18px;
+    border: none; border-radius: 50%;
+    padding: 10px 15px; font-size: 18px;
     cursor: pointer;
-    display: none;
-    z-index: 1001;
+    display: none; z-index: 10000;
   }
   #adOverlay {
     position: fixed;
@@ -40,7 +30,7 @@
     display:none;
     justify-content:center;
     align-items:center;
-    z-index: 1000;
+    z-index: 9999;
   }
   #adOverlay video {
     width:100%; height:100%;
@@ -57,11 +47,11 @@
 </video>
 
 <!-- Botón regresar -->
-<button id="backButton" onclick="window.location.href='index.html'">⟵</button>
+<button id="backButton">⟵</button>
 
 <!-- Overlay anuncio -->
 <div id="adOverlay">
-  <video id="adVideo" playsinline webkit-playsinline muted>
+  <video id="adVideo" playsinline webkit-playsinline>
     <source src="https://ia601300.us.archive.org/15/items/youtube-L4PVw0oaZSo/L4PVw0oaZSo.mp4" type="video/mp4">
     Tu navegador no soporta el video de anuncio.
   </video>
@@ -73,80 +63,79 @@ const backButton = document.getElementById('backButton');
 const adOverlay = document.getElementById('adOverlay');
 const adVideo = document.getElementById('adVideo');
 
-const adInterval = 10*60; // 10 minutos en segundos
+const adInterval = 10*60; // 10 minutos
 let nextAdTime = adInterval;
 let adPlaying = false;
 let userInteracted = false;
 
-// Mostrar burbuja de regresar al tocar pantalla
+// Mostrar burbuja de regresar al tocar
 let hideTimeout;
-function showBackButton(){
-  backButton.style.display='block';
+document.addEventListener('click', () => {
+  backButton.style.display = 'block';
+  userInteracted = true;
   clearTimeout(hideTimeout);
-  hideTimeout = setTimeout(()=>{ backButton.style.display='none'; },4000);
-}
-document.addEventListener('click', ()=>{
-  userInteracted=true;
-  showBackButton();
-});
-document.addEventListener('touchstart', ()=>{
-  userInteracted=true;
-  showBackButton();
-}, {passive:true});
-
-// Temporizador de anuncios
-let adTimer;
-function startAdTimer(){
-  if(adTimer) return;
-  adTimer=setInterval(()=>{
-    if(!adPlaying && movie.currentTime >= nextAdTime){
-      playAd();
-      nextAdTime += adInterval;
-    }
-  },1000);
-}
-
-// Función mostrar anuncio
-function playAd(){
-  adPlaying=true;
-  movie.pause();
-  adOverlay.style.display='flex';
-  adVideo.currentTime=0;
-  adVideo.muted=false;
-
-  // Reproducir anuncio
-  const playPromise = adVideo.play();
-  if(playPromise !== undefined){
-    playPromise.catch(()=>{
-      // si falla autoplay con sonido, reproducir muted
-      adVideo.muted=true;
-      adVideo.play().catch(()=>{});
-    });
-  }
-}
-
-// Al terminar anuncio, volver a película
-adVideo.addEventListener('ended', ()=>{
-  adOverlay.style.display='none';
-  adPlaying=false;
-  movie.play().catch(()=>{});
+  hideTimeout = setTimeout(()=>{ backButton.style.display='none'; }, 4000);
 });
 
-// Ajustar videos a pantalla
+// Botón regresar
+backButton.addEventListener('click', ()=>{ window.location.href='index.html'; });
+
+// Ajuste videos
 function adjustVideoSize(){
-  movie.style.width=window.innerWidth+"px";
-  movie.style.height=window.innerHeight+"px";
-  adVideo.style.width=window.innerWidth+"px";
-  adVideo.style.height=window.innerHeight+"px";
+  movie.style.width = window.innerWidth + "px";
+  movie.style.height = window.innerHeight + "px";
+  adVideo.style.width = window.innerWidth + "px";
+  adVideo.style.height = window.innerHeight + "px";
 }
 window.addEventListener('resize', adjustVideoSize);
 window.addEventListener('orientationchange', adjustVideoSize);
 adjustVideoSize();
 
-// Manejo reproducción película
+// Temporizador de anuncio
+function setupAdTimer(){
+  setInterval(()=>{
+    if(!adPlaying && movie.currentTime >= nextAdTime){
+      playAd();
+      nextAdTime += adInterval;
+    }
+  }, 1000);
+}
 movie.addEventListener('play', ()=>{
-  startAdTimer();
+  if(!movie.adTimer && userInteracted){
+    setupAdTimer();
+  }
 });
+
+// Función mostrar anuncio
+function playAd(){
+  adPlaying = true;
+  movie.pause();
+  adOverlay.style.display='flex';
+  adVideo.currentTime = 0;
+  adVideo.muted = false;
+
+  const playPromise = adVideo.play();
+  if(playPromise !== undefined){
+    playPromise.catch(() => {
+      adVideo.muted = true;
+      adVideo.play().catch(()=>{});
+    });
+  }
+}
+
+// Cuando termina anuncio
+adVideo.addEventListener('ended', ()=>{
+  adOverlay.style.display='none';
+  adPlaying = false;
+  movie.play().catch(()=>{});
+});
+
+// Primer toque iOS/Android para permitir audio
+document.addEventListener('touchstart', ()=>{
+  movie.load();
+  adVideo.load();
+}, {once:true});
+
 </script>
 
 </body>
