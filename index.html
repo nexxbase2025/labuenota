@@ -235,6 +235,36 @@ let isPlaying = false;
 let animationId;
 let deferredPrompt;
 let peliWindow = null;
+// ===== MEDIA SESSION PARA PANTALLA DE BLOQUEO =====
+if ('mediaSession' in navigator) {
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: 'LA BUENOTA RADIO ONLINE',      // Nombre que aparece en la pantalla de bloqueo
+    artist: 'Ivibra',                       // Artista o radio
+    album: 'Radio Online',                  // Opcional
+    artwork: [
+      { src: 'ivibra.webp', sizes: '96x96', type: 'image/webp' },
+      { src: 'ivibra.webp', sizes: '128x128', type: 'image/webp' },
+      { src: 'ivibra.webp', sizes: '192x192', type: 'image/webp' },
+      { src: 'ivibra.webp', sizes: '256x256', type: 'image/webp' },
+      { src: 'ivibra.webp', sizes: '384x384', type: 'image/webp' },
+      { src: 'ivibra.webp', sizes: '512x512', type: 'image/webp' }
+    ]
+  });
+
+  navigator.mediaSession.setActionHandler('play', function() { 
+    audio.play();
+    playPauseBtn.textContent='⏸';
+    isPlaying = true;
+    animateFakeSpectrum();
+  });
+  navigator.mediaSession.setActionHandler('pause', function() { 
+    audio.pause();
+    playPauseBtn.textContent='▶';
+    isPlaying = false;
+    cancelAnimationFrame(animationId);
+  });
+}
+// ================================================
 
 // Crear barras espectro
 const bars = [];
