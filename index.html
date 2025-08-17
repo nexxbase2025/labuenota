@@ -12,17 +12,15 @@
 <link rel="stylesheet" href="style.css" />
 <style>
   body {
-  margin: 0; 
-  padding: 0;
-  font-family: Arial, sans-serif;
-  overflow-x: hidden;
-  color: #fff;
-
-  /* Fondo animado con destellos */
-  background: linear-gradient(120deg, #000000, #ff0000, #c35500);
-  background-size: 400% 400%;
-  animation: gradientAnimation 15s ease infinite;
-}
+    margin: 0; 
+    padding: 0;
+    font-family: Arial, sans-serif;
+    overflow-x: hidden;
+    color: #fff;
+    background: linear-gradient(120deg, #000000, #ff0000, #c35500);
+    background-size: 400% 400%;
+    animation: gradientAnimation 15s ease infinite;
+  }
   img#logo {
     position: fixed;
     top: 5px;
@@ -84,13 +82,9 @@
     align-items: center;
     transition: transform 0.3s ease;
   }
-  .social-row-abajo a:hover {
-    transform: scale(1.15);
-  }
-  .social-row-abajo img {
-    width: 40px;
-    height: 40px;
-  }
+  .social-row-abajo a:hover { transform: scale(1.15); }
+  .social-row-abajo img { width: 40px; height: 40px; }
+
   .radio-player {
     position: fixed;
     bottom: 20px;
@@ -175,23 +169,23 @@
     font-weight: bold;
   }
   #peli-bubble {
-  position: fixed;
-  bottom: 400px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #f1bd02;
-  color: rgb(4, 4, 4);
-  padding: 10px 15px;
-  border-radius: 25px;
-  font-weight: bold;
-  font-size: 15px;
-  cursor: pointer;
-  box-shadow: 0 0 15px #ffffff;
-  z-index: 10002;
-  text-align: center;
-  white-space: nowrap;      /* Evita salto de línea */
-  display: inline-block;    /* Ajusta el ancho al texto */
-}
+    position: fixed;
+    bottom: 400px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f1bd02;
+    color: rgb(4, 4, 4);
+    padding: 10px 15px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 0 15px #ffffff;
+    z-index: 10002;
+    text-align: center;
+    white-space: nowrap;
+    display: inline-block;
+  }
 </style>
 </head>
 <body>
@@ -220,7 +214,7 @@
   <div class="spectrum" id="spectrum"></div>
 </div>
 
-<audio id="audio" preload="auto" src="https://stream.zeno.fm/jpsr5zsxjlguv"></audio>
+<audio id="audio" preload="auto" src="https://stream.zeno.fm/jpsr5zsxjlguv" crossorigin="anonymous"></audio>
 
 <div id="install-bubble">📲 Instalar app</div>
 <div id="ios-install-prompt">
@@ -259,26 +253,53 @@ function animateFakeSpectrum(){
   animationId = requestAnimationFrame(animateFakeSpectrum);
 }
 
+// Función mejorada de reproducción en Android/iOS sin pausas automáticas
+function playRadio(){
+  audio.manualPaused = false;
+  audio.play().then(()=>{
+    playPauseBtn.textContent='⏸';
+    isPlaying=true;
+    animateFakeSpectrum();
+  }).catch(err=>{
+    console.error('Error al reproducir:', err);
+  });
+}
+
 // Play/Pause radio
-playPauseBtn.addEventListener('click', () => {
+playPauseBtn.addEventListener('click', ()=>{
   if(!isPlaying){
-    audio.play().then(()=>{ playPauseBtn.textContent='⏸'; isPlaying=true; animateFakeSpectrum(); });
+    playRadio();
   } else {
-    audio.pause(); playPauseBtn.textContent='▶'; isPlaying=false; cancelAnimationFrame(animationId);
+    audio.manualPaused = true;
+    audio.pause();
+    playPauseBtn.textContent='▶';
+    isPlaying=false;
+    cancelAnimationFrame(animationId);
   }
 });
-// Desbloquear audio al primer toque en Android/iOS
-document.addEventListener('touchstart', ()=>{
-  audio.play().then(()=>{ audio.pause(); }).catch(()=>{});
-}, {once:true});
 
-// Reiniciar spectrum al volver a la pestaña visible
+// Desbloquear audio al primer toque (Android/iOS)
+document.addEventListener('touchstart', ()=>{
+  if(audio.paused && !isPlaying){
+    audio.play().then(()=>audio.pause()).catch(()=>{});
+  }
+},{once:true});
+
+// Reintentar reproducción si audio se detiene inesperadamente
+audio.addEventListener('pause', ()=>{
+  if(isPlaying && !audio.manualPaused){
+    setTimeout(()=>playRadio(),500);
+  }
+});
+
+// Reiniciar spectrum al volver visible
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState==='visible' && isPlaying){
-    cancelAnimationFrame(animationId);
     animateFakeSpectrum();
+    if(audio.paused) playRadio();
   }
 });
+
 // Android instal
 window.addEventListener('beforeinstallprompt', (e)=>{
   e.preventDefault(); deferredPrompt=e; installBubble.style.display='block';
@@ -287,6 +308,7 @@ installBubble.addEventListener('click', async ()=>{
   installBubble.style.display='none';
   if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }
 });
+
 // iOS instal
 function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
 function isInStandaloneMode(){ return ('standalone' in window.navigator)&&window.navigator.standalone; }
@@ -303,7 +325,6 @@ peliBubble.addEventListener('click', ()=>{
   if(isPlaying){ audio.pause(); cancelAnimationFrame(animationId); }
   peliWindow = window.open('peli.html','_blank','width='+screen.width+',height='+screen.height+',fullscreen=yes');
 
-  // Crear burbuja de sonido para Android durante anuncios
   window.addEventListener('message', (e)=>{
     if(e.data==='adPlaying'){
       const soundBubble = document.createElement('button');
@@ -331,7 +352,7 @@ peliBubble.addEventListener('click', ()=>{
       if(existingBubble) existingBubble.remove();
     }
     if(e.data==='resumeRadio'){
-      audio.play().then(()=>{ playPauseBtn.textContent='⏸'; isPlaying=true; animateFakeSpectrum(); });
+      playRadio();
     }
   });
 });
