@@ -138,6 +138,7 @@ async function playAd(){
 
     movie.currentTime = movieTimeBeforeAd;
     movie.muted = false;
+    movie.playbackRate = 1.0; // velocidad normal
     movie.play().catch(()=>{});
     adPlaying = false;
 
@@ -149,7 +150,22 @@ async function playAd(){
 // Primer toque desbloquea audio en iOS/Android
 document.addEventListener('touchstart', ()=>{
   movie.load();
+  if(isAndroid && !soundActivated){
+    movie.muted = false;
+    soundActivated = true;
+    localStorage.setItem("soundActivated","true");
+  }
 }, {once:true});
+
+// Aumentar fluidez al adelantar o retroceder
+movie.addEventListener('seeking', ()=>{
+  if(adPlaying) return;
+  movie.playbackRate = 2.0; // 2x mientras se busca
+});
+movie.addEventListener('seeked', ()=>{
+  movie.playbackRate = 1.0; // volver a normal
+});
+
 </script>
 
 </body>
