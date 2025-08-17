@@ -12,12 +12,17 @@
 <link rel="stylesheet" href="style.css" />
 <style>
   body {
-    margin: 0; padding: 0;
-    font-family: Arial, sans-serif;
-    background: #df200f;
-    color: #fff;
-    overflow-x: hidden;
-  }
+  margin: 0; 
+  padding: 0;
+  font-family: Arial, sans-serif;
+  overflow-x: hidden;
+  color: #fff;
+
+  /* Fondo animado con destellos */
+  background: linear-gradient(120deg, #000000, #ff0000, #c35500);
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+}
   img#logo {
     position: fixed;
     top: 5px;
@@ -134,8 +139,8 @@
     position: fixed;
     bottom: 120px;
     right: 20px;
-    background: #ff6a00;
-    color: white;
+    background: #eaff00;
+    color: rgb(5, 5, 5);
     padding: 10px 15px;
     border-radius: 25px;
     font-weight: bold;
@@ -219,7 +224,7 @@
 
 <div id="install-bubble">📲 Instalar app</div>
 <div id="ios-install-prompt">
-  📲 Para instalar esta app en iPhone, pulsa <strong>Compartir</strong> → <strong>Añadir a pantalla de inicio</strong>.
+  📲 Para instalar esta app en iPhone, pulsa <strong>Compartir</strong> → <strong>Y luego Añadir a pantalla de inicio</strong>.
   <br /><button id="closeIosPromptBtn">Cerrar</button>
 </div>
 
@@ -262,12 +267,16 @@ playPauseBtn.addEventListener('click', () => {
     audio.pause(); playPauseBtn.textContent='▶'; isPlaying=false; cancelAnimationFrame(animationId);
   }
 });
-// iOS primer toque
-document.addEventListener('touchstart', ()=>{ audio.load(); }, {once:true});
-// Visibilidad
+// Desbloquear audio al primer toque en Android/iOS
+document.addEventListener('touchstart', ()=>{
+  audio.play().then(()=>{ audio.pause(); }).catch(()=>{});
+}, {once:true});
+
+// Reiniciar spectrum al volver a la pestaña visible
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState==='visible' && isPlaying){
-    audio.pause(); audio.load(); audio.play().catch(()=>{});
+    cancelAnimationFrame(animationId);
+    animateFakeSpectrum();
   }
 });
 // Android instal
