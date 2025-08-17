@@ -11,24 +11,187 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="style.css" />
 <style>
-  body { margin:0; padding:0; font-family:Arial,sans-serif; overflow-x:hidden; color:#fff; background:linear-gradient(120deg,#000,#f00,#000); background-size:400% 400%; animation:gradientAnimation 15s ease infinite; }
-  img#logo { position:fixed; top:5px; left:50%; transform:translateX(-50%); width:300px; z-index:9999; }
-  .gallery-scroll { position:fixed; bottom:200px; left:0; width:100%; overflow-x:auto; display:flex; gap:10px; padding-left:50vw; padding-right:50vw; box-sizing:border-box; z-index:9998; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; justify-content:flex-start; scroll-padding-left:50vw; scroll-padding-right:50vw; }
-  .gallery-item { flex:0 0 auto; width:70vw; aspect-ratio:16/9; scroll-snap-align:center; border-radius:12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.6); }
-  .gallery-item img { width:100%; height:100%; object-fit:cover; display:block; border-radius:12px; }
-  .social-row-abajo { position:fixed; bottom:125px; left:50%; transform:translateX(-50%); display:flex; gap:15px; z-index:10001; }
-  .social-row-abajo a { background:#fff; padding:4px; border-radius:50%; box-shadow:0 4px 10px rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; transition:transform 0.3s ease; }
-  .social-row-abajo a:hover { transform:scale(1.15); }
-  .social-row-abajo img { width:40px; height:40px; }
-  .radio-player { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#222; padding:12px 20px; border-radius:25px; display:flex; align-items:center; gap:15px; box-shadow:0 0 20px; z-index:10002; }
-  .play-btn { font-size:26px; width:48px; height:48px; border:none; border-radius:50%; background:#f1bd02; color:white; cursor:pointer; box-shadow:0 0 10px #f1bd02; display:flex; justify-content:center; align-items:center; user-select:none; }
-  .play-btn:focus { outline:2px solid #fff; }
-  .spectrum { display:flex; justify-content:center; align-items:flex-end; gap:4px; height:40px; width:150px; margin:auto; margin-top:10px; z-index:999; }
-  .bar { width:4px; background:lime; animation:bounce 1s infinite ease-in-out; transition:height 0.1s ease; }
-  #install-bubble { display:none; position:fixed; bottom:120px; right:20px; background:#eaff00; color:#050505; padding:10px 15px; border-radius:25px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow:0 0 15px #ff6a00cc; z-index:99999; }
-  #ios-install-prompt { position:fixed; bottom:20px; left:20px; right:20px; background:rgba(0,0,0,0.9); color:white; padding:16px; border-radius:12px; font-size:14px; text-align:center; z-index:99999; box-shadow:0 4px 12px rgba(0,0,0,0.5); display:none; }
-  #ios-install-prompt button { margin-top:8px; background:#ff4444; color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:bold; }
-  #peli-bubble { position:fixed; bottom:400px; left:50%; transform:translateX(-50%); background:#f1bd02; color:#040404; padding:10px 15px; border-radius:25px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow:0 0 15px #fff; z-index:10002; text-align:center; white-space:nowrap; display:inline-block; }
+  body {
+  margin: 0; 
+  padding: 0;
+  font-family: Arial, sans-serif;
+  overflow-x: hidden;
+  color: #fff;
+
+  /* Fondo animado con destellos */
+  background: linear-gradient(120deg, #000000, #ff0000, #c35500);
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+}
+  img#logo {
+    position: fixed;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    z-index: 9999;
+  }
+  .gallery-scroll {
+    position: fixed;
+    bottom: 200px;
+    left: 0;
+    width: 100%;
+    overflow-x: auto;
+    display: flex;
+    gap: 10px;
+    padding-left: 50vw;
+    padding-right: 50vw;
+    box-sizing: border-box;
+    z-index: 9998;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+    scroll-padding-left: 50vw;
+    scroll-padding-right: 50vw;
+  }
+  .gallery-item {
+    flex: 0 0 auto;
+    width: 70vw;
+    aspect-ratio: 16 / 9;
+    scroll-snap-align: center;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  }
+  .gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 12px;
+  }
+  .social-row-abajo {
+    position: fixed;
+    bottom: 125px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    z-index: 10001;
+  }
+  .social-row-abajo a {
+    background: #fff;
+    padding: 4px;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s ease;
+  }
+  .social-row-abajo a:hover {
+    transform: scale(1.15);
+  }
+  .social-row-abajo img {
+    width: 40px;
+    height: 40px;
+  }
+  .radio-player {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    padding: 12px 20px;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 0 20px ;
+    z-index: 10002;
+  }
+  .play-btn {
+    font-size: 26px;
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 50%;
+    background: #f1bd02;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 0 10px #f1bd02;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+  }
+  .play-btn:focus { outline: 2px solid #fff; }
+  .spectrum {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 4px;
+    height: 40px;
+    width: 150px;
+    margin: auto;
+    margin-top: 10px;
+    z-index: 999;
+  }
+  .bar { width: 4px; background: lime; animation: bounce 1s infinite ease-in-out; transition: height 0.1s ease; }
+
+  #install-bubble {
+    display: none;
+    position: fixed;
+    bottom: 120px;
+    right: 20px;
+    background: #eaff00;
+    color: rgb(5, 5, 5);
+    padding: 10px 15px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 0 15px #ff6a00cc;
+    z-index: 99999;
+  }
+  #ios-install-prompt {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.9);
+    color: white;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    text-align: center;
+    z-index: 99999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    display: none;
+  }
+  #ios-install-prompt button {
+    margin-top: 8px;
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  #peli-bubble {
+  position: fixed;
+  bottom: 400px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f1bd02;
+  color: rgb(4, 4, 4);
+  padding: 10px 15px;
+  border-radius: 25px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 0 15px #ffffff;
+  z-index: 10002;
+  text-align: center;
+  white-space: nowrap;      /* Evita salto de línea */
+  display: inline-block;    /* Ajusta el ancho al texto */
+}
 </style>
 </head>
 <body>
@@ -57,7 +220,7 @@
   <div class="spectrum" id="spectrum"></div>
 </div>
 
-<audio id="audio" preload="auto" src="https://stream.zeno.fm/jpsr5zsxjlguv" crossorigin="anonymous"></audio>
+<audio id="audio" preload="auto" src="https://stream.zeno.fm/jpsr5zsxjlguv"></audio>
 
 <div id="install-bubble">📲 Instalar app</div>
 <div id="ios-install-prompt">
@@ -81,75 +244,33 @@ let peliWindow = null;
 
 // Crear barras espectro
 const bars = [];
-for(let i=0;i<16;i++){
+for(let i=0; i<16; i++){
   const bar = document.createElement('div');
-  bar.className='bar';
+  bar.className = 'bar';
   spectrum.appendChild(bar);
   bars.push(bar);
 }
 function animateFakeSpectrum(){
-  bars.forEach(bar => { bar.style.height = `${Math.random()*100}%`; });
+  bars.forEach(bar => {
+    bar.style.height = `${Math.random()*100}%`;
+  });
   const logo = document.getElementById('logo');
   if(logo) logo.style.transform = `translateX(-50%) scale(${1+Math.random()*0.1})`;
-  animationId=requestAnimationFrame(animateFakeSpectrum);
+  animationId = requestAnimationFrame(animateFakeSpectrum);
 }
 
-// Detectar Android
-const isAndroid = /android/i.test(navigator.userAgent);
-
-// Función play segura Android/iPhone
-async function playAudio(){
-  if(isAndroid){
-    try{
-      await audio.play();
-      isPlaying=true;
-      playPauseBtn.textContent='⏸';
-      animateFakeSpectrum();
-    }catch(e){
-      console.log('Error reproduciendo Android:', e);
-    }
-  }else{
-    // iPhone sigue igual
-    if(!window.audioCtx){
-      window.AudioContext = window.AudioContext || window.webkitAudioContext;
-      window.audioCtx = new AudioContext();
-      window.track = window.audioCtx.createMediaElementSource(audio);
-      window.track.connect(window.audioCtx.destination);
-    }
-    if(window.audioCtx.state==='suspended') await window.audioCtx.resume();
-    try{
-      await audio.play();
-      isPlaying=true;
-      playPauseBtn.textContent='⏸';
-      animateFakeSpectrum();
-    }catch(e){
-      console.log('Error reproduciendo iPhone:', e);
-    }
+// Play/Pause radio
+playPauseBtn.addEventListener('click', () => {
+  if(!isPlaying){
+    audio.play().then(()=>{ playPauseBtn.textContent='⏸'; isPlaying=true; animateFakeSpectrum(); });
+  } else {
+    audio.pause(); playPauseBtn.textContent='▶'; isPlaying=false; cancelAnimationFrame(animationId);
   }
-}
-
-// Play/Pause
-playPauseBtn.addEventListener('click', ()=>{
-  if(!isPlaying) playAudio();
-  else { audio.pause(); isPlaying=false; playPauseBtn.textContent='▶'; cancelAnimationFrame(animationId); }
 });
-
-// Desbloqueo inicial de Android/iPhone
-function unlockAudio(){
-  if(isAndroid){
-    audio.play().then(()=>{ audio.pause(); }).catch(()=>{});
-  }else{
-    if(!window.audioCtx){
-      window.AudioContext = window.AudioContext || window.webkitAudioContext;
-      window.audioCtx = new AudioContext();
-      window.track = window.audioCtx.createMediaElementSource(audio);
-      window.track.connect(window.audioCtx.destination);
-    }
-    if(window.audioCtx.state==='suspended') window.audioCtx.resume();
-  }
-}
-document.addEventListener('touchstart', unlockAudio, {once:true});
-document.addEventListener('click', unlockAudio, {once:true});
+// Desbloquear audio al primer toque en Android/iOS
+document.addEventListener('touchstart', ()=>{
+  audio.play().then(()=>{ audio.pause(); }).catch(()=>{});
+}, {once:true});
 
 // Reiniciar spectrum al volver a la pestaña visible
 document.addEventListener('visibilitychange', ()=>{
@@ -158,8 +279,7 @@ document.addEventListener('visibilitychange', ()=>{
     animateFakeSpectrum();
   }
 });
-
-// Android instalación
+// Android instal
 window.addEventListener('beforeinstallprompt', (e)=>{
   e.preventDefault(); deferredPrompt=e; installBubble.style.display='block';
 });
@@ -167,8 +287,7 @@ installBubble.addEventListener('click', async ()=>{
   installBubble.style.display='none';
   if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }
 });
-
-// iOS instalación
+// iOS instal
 function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
 function isInStandaloneMode(){ return ('standalone' in window.navigator)&&window.navigator.standalone; }
 document.addEventListener('DOMContentLoaded', ()=>{
@@ -183,6 +302,8 @@ closeIosPromptBtn.addEventListener('click', ()=>{
 peliBubble.addEventListener('click', ()=>{
   if(isPlaying){ audio.pause(); cancelAnimationFrame(animationId); }
   peliWindow = window.open('peli.html','_blank','width='+screen.width+',height='+screen.height+',fullscreen=yes');
+
+  // Crear burbuja de sonido para Android durante anuncios
   window.addEventListener('message', (e)=>{
     if(e.data==='adPlaying'){
       const soundBubble = document.createElement('button');
@@ -201,16 +322,16 @@ peliBubble.addEventListener('click', ()=>{
       soundBubble.style.zIndex='10003';
       document.body.appendChild(soundBubble);
       soundBubble.onclick = ()=>{
-        e.source.postMessage('unmute','*');
+        e.source.postMessage('unmute', '*');
         soundBubble.remove();
       };
     }
     if(e.data==='adEnded'){
-      const existingBubble=document.getElementById('adSoundBubble');
+      const existingBubble = document.getElementById('adSoundBubble');
       if(existingBubble) existingBubble.remove();
     }
     if(e.data==='resumeRadio'){
-      playAudio();
+      audio.play().then(()=>{ playPauseBtn.textContent='⏸'; isPlaying=true; animateFakeSpectrum(); });
     }
   });
 });
