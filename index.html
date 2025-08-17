@@ -84,6 +84,7 @@
   }
   .social-row-abajo a:hover { transform: scale(1.15); }
   .social-row-abajo img { width: 40px; height: 40px; }
+
   .radio-player {
     position: fixed;
     bottom: 20px;
@@ -213,7 +214,7 @@
   <div class="spectrum" id="spectrum"></div>
 </div>
 
-<audio id="audio" preload="auto" src="https://stream.zeno.fm/jpsr5zsxjlguv"></audio>
+<audio id="audio" preload="auto" src="https://stream.zeno.fm/jpsr5zsxjlguv" crossorigin="anonymous"></audio>
 
 <div id="install-bubble">📲 Instalar app</div>
 <div id="ios-install-prompt">
@@ -235,37 +236,6 @@ let animationId;
 let deferredPrompt;
 let peliWindow = null;
 
-// ===== MEDIA SESSION PARA PANTALLA DE BLOQUEO =====
-if ('mediaSession' in navigator) {
-  navigator.mediaSession.metadata = new MediaMetadata({
-    title: 'LA BUENOTA RADIO ONLINE',
-    artist: 'Ivibra',
-    album: 'Radio Online',
-    artwork: [
-      { src: 'ivibra.webp',   sizes: '96x96',   type: 'image/webp' },
-      { src: 'ivibra.webp',   sizes: '128x128', type: 'image/webp' },
-      { src: 'ivibra.webp',   sizes: '192x192', type: 'image/webp' },
-      { src: 'ivibra.webp',   sizes: '256x256', type: 'image/webp' },
-      { src: 'ivibra.webp',   sizes: '384x384', type: 'image/webp' },
-      { src: 'ivibra.webp',   sizes: '512x512', type: 'image/webp' },
-    ]
-  });
-
-  navigator.mediaSession.setActionHandler('play', function() { 
-    audio.play();
-    playPauseBtn.textContent='⏸';
-    isPlaying = true;
-    animateFakeSpectrum();
-  });
-  navigator.mediaSession.setActionHandler('pause', function() { 
-    audio.pause();
-    playPauseBtn.textContent='▶';
-    isPlaying = false;
-    cancelAnimationFrame(animationId);
-  });
-}
-// ================================================
-
 // Crear barras espectro
 const bars = [];
 for(let i=0; i<16; i++){
@@ -283,28 +253,54 @@ function animateFakeSpectrum(){
   animationId = requestAnimationFrame(animateFakeSpectrum);
 }
 
+// Función mejorada de reproducción en Android/iOS sin pausas automáticas
+function playRadio(){
+  audio.manualPaused = false;
+  audio.play().then(()=>{
+    playPauseBtn.textContent='⏸';
+    isPlaying=true;
+    animateFakeSpectrum();
+  }).catch(err=>{
+    console.error('Error al reproducir:', err);
+  });
+}
+
 // Play/Pause radio
-playPauseBtn.addEventListener('click', () => {
+playPauseBtn.addEventListener('click', ()=>{
   if(!isPlaying){
-    audio.play().then(()=>{ playPauseBtn.textContent='⏸'; isPlaying=true; animateFakeSpectrum(); });
+    playRadio();
   } else {
-    audio.pause(); playPauseBtn.textContent='▶'; isPlaying=false; cancelAnimationFrame(animationId);
+    audio.manualPaused = true;
+    audio.pause();
+    playPauseBtn.textContent='▶';
+    isPlaying=false;
+    cancelAnimationFrame(animationId);
   }
 });
-// Desbloquear audio al primer toque en Android/iOS
-document.addEventListener('touchstart', ()=>{
-  audio.play().then(()=>{ audio.pause(); }).catch(()=>{});
-}, {once:true});
 
-// Reiniciar spectrum al volver a la pestaña visible
+// Desbloquear audio al primer toque (Android/iOS)
+document.addEventListener('touchstart', ()=>{
+  if(audio.paused && !isPlaying){
+    audio.play().then(()=>audio.pause()).catch(()=>{});
+  }
+},{once:true});
+
+// Reintentar reproducción si audio se detiene inesperadamente
+audio.addEventListener('pause', ()=>{
+  if(isPlaying && !audio.manualPaused){
+    setTimeout(()=>playRadio(),500);
+  }
+});
+
+// Reiniciar spectrum al volver visible
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState==='visible' && isPlaying){
-    cancelAnimationFrame(animationId);
     animateFakeSpectrum();
+    if(audio.paused) playRadio();
   }
 });
 
-// Android install
+// Android instal
 window.addEventListener('beforeinstallprompt', (e)=>{
   e.preventDefault(); deferredPrompt=e; installBubble.style.display='block';
 });
@@ -313,7 +309,7 @@ installBubble.addEventListener('click', async ()=>{
   if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }
 });
 
-// iOS install
+// iOS instal
 function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
 function isInStandaloneMode(){ return ('standalone' in window.navigator)&&window.navigator.standalone; }
 document.addEventListener('DOMContentLoaded', ()=>{
@@ -329,7 +325,6 @@ peliBubble.addEventListener('click', ()=>{
   if(isPlaying){ audio.pause(); cancelAnimationFrame(animationId); }
   peliWindow = window.open('peli.html','_blank','width='+screen.width+',height='+screen.height+',fullscreen=yes');
 
-  // Crear burbuja de sonido para Android durante anuncios
   window.addEventListener('message', (e)=>{
     if(e.data==='adPlaying'){
       const soundBubble = document.createElement('button');
@@ -357,7 +352,7 @@ peliBubble.addEventListener('click', ()=>{
       if(existingBubble) existingBubble.remove();
     }
     if(e.data==='resumeRadio'){
-      audio.play().then(()=>{ playPauseBtn.textContent='⏸'; isPlaying=true; animateFakeSpectrum(); });
+      playRadio();
     }
   });
 });
