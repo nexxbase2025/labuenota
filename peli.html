@@ -24,8 +24,7 @@
   }
   #activateSound {
     position: fixed;
-    bottom: 30px; left: 50%;
-    transform: translateX(-50%);
+    bottom: 30px; right: 30px; /* esquina derecha */
     background: rgba(255,255,255,0.9);
     color: #000;
     border: none; border-radius: 25px;
@@ -62,6 +61,9 @@ const isAndroid = /Android/i.test(navigator.userAgent);
 // Guardar tiempo de película antes del anuncio
 let movieTimeBeforeAd = 0;
 
+// Verificar si ya se activó sonido en Android antes
+let soundActivated = localStorage.getItem("soundActivated") === "true";
+
 // Mostrar botón regresar
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
@@ -90,10 +92,7 @@ movie.addEventListener('timeupdate', () => {
 // Función reproducir anuncio
 async function playAd(){
   adPlaying = true;
-
-  // Guardar tiempo actual de la película
   movieTimeBeforeAd = movie.currentTime;
-
   movie.pause();
 
   const originalSrc = movie.querySelector('source').src;
@@ -104,41 +103,45 @@ async function playAd(){
   movie.querySelector('source').type = "video/mp4";
   movie.load();
 
-  // Android: autoplay en mute y mostrar burbuja SIEMPRE
   if(isAndroid){
-    movie.muted = true;
-    try{ 
-      await movie.play(); 
-    } catch(e){}
-    activateSound.style.display = 'block';
+    if(soundActivated){
+      movie.muted = false;
+      await movie.play().catch(()=>{});
+    } else {
+      movie.muted = true;
+      try{ 
+        await movie.play(); 
+      } catch(e){}
+      activateSound.style.display = 'block';
+    }
   } else {
     movie.muted = false;
     movie.play().catch(()=>{});
   }
 
-  // Acción del botón de sonido
+  // Click en burbuja activa sonido y guarda preferencia
   activateSound.onclick = () => {
     movie.muted = false;
     movie.play().catch(()=>{});
     activateSound.style.display = 'none';
+    soundActivated = true;
+    localStorage.setItem("soundActivated","true");
   };
 
-  // Al terminar el anuncio, volver a la película sin demora
+  // Al terminar anuncio volver inmediatamente a la peli
   const onAdEnded = () => {
     movie.removeEventListener('ended', onAdEnded);
 
-    // Restaurar película inmediatamente
     movie.src = originalSrc;
     movie.querySelector('source').type = originalType;
     movie.load();
 
-    movie.addEventListener("loadedmetadata", () => {
-      movie.currentTime = movieTimeBeforeAd;
-      movie.muted = false;
-      movie.play().catch(()=>{});
-      adPlaying = false;
-      activateSound.style.display = 'none';
-    }, {once:true});
+    movie.currentTime = movieTimeBeforeAd;
+    movie.muted = false;
+    movie.play().catch(()=>{});
+    adPlaying = false;
+
+    activateSound.style.display = 'none';
   };
   movie.addEventListener('ended', onAdEnded);
 }
@@ -147,7 +150,6 @@ async function playAd(){
 document.addEventListener('touchstart', ()=>{
   movie.load();
 }, {once:true});
-
 </script>
 
 </body>
