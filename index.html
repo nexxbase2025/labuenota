@@ -69,22 +69,12 @@
 const audio = document.getElementById('audio');
 const playPauseBtn = document.getElementById('playPauseBtn');
 const spectrum = document.getElementById('spectrum');
-const installBubble = document.getElementById('install-bubble');
-const iosInstallPrompt = document.getElementById('ios-install-prompt');
-const closeIosPromptBtn = document.getElementById('closeIosPromptBtn');
-const peliBubble = document.getElementById('peli-bubble');
-
 let isPlaying = false;
 let animationId;
-let deferredPrompt;
-let peliWindow = null;
-
-// AudioContext para animación y compatibilidad
-const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx;
 let track;
 
-// Crear barras espectro
+// Crear barras
 const bars = [];
 for(let i=0;i<16;i++){
   const bar = document.createElement('div');
@@ -92,117 +82,54 @@ for(let i=0;i<16;i++){
   spectrum.appendChild(bar);
   bars.push(bar);
 }
+
+// Animación fake
 function animateFakeSpectrum(){
-  bars.forEach(bar => { bar.style.height = `${Math.random()*100}%`; });
-  const logo = document.getElementById('logo');
-  if(logo) logo.style.transform = `translateX(-50%) scale(${1+Math.random()*0.1})`;
+  bars.forEach(bar=>bar.style.height=`${Math.random()*100}%`);
   animationId=requestAnimationFrame(animateFakeSpectrum);
 }
 
-// Función para iniciar audio con AudioContext seguro
-async function startAudio(){
+// Inicializa AudioContext y conecta audio
+function initAudioContext(){
   if(!audioCtx){
-    audioCtx = new AudioContext();
-    track = audioCtx.createMediaElementSource(audio);
-    track.connect(audioCtx.destination);
-  }
-  if(audioCtx.state==='suspended') await audioCtx.resume();
-  try{
-    await audio.play();
-    isPlaying=true;
-    playPauseBtn.textContent='⏸';
-    animateFakeSpectrum();
-  }catch(e){
-    console.log('Error reproduciendo audio:', e);
-  }
-}
-
-// Play/Pause radio
-playPauseBtn.addEventListener('click', ()=>{
-  if(!isPlaying){
-    startAudio();
-  }else{
-    audio.pause();
-    isPlaying=false;
-    playPauseBtn.textContent='▶';
-    cancelAnimationFrame(animationId);
-  }
-});
-
-// Desbloqueo inicial del audio al primer toque
-function unlockAudio(){
-  if(!audioCtx){
-    audioCtx = new AudioContext();
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
     track = audioCtx.createMediaElementSource(audio);
     track.connect(audioCtx.destination);
   }
   if(audioCtx.state==='suspended') audioCtx.resume();
 }
-document.addEventListener('touchstart', unlockAudio, {once:true});
-document.addEventListener('click', unlockAudio, {once:true});
 
-// Reiniciar spectrum al volver a la pestaña visible
+// Play/Pause real
+async function togglePlay(){
+  try{
+    initAudioContext();
+    if(!isPlaying){
+      await audio.play();
+      isPlaying=true;
+      playPauseBtn.textContent='⏸';
+      animateFakeSpectrum();
+    } else {
+      audio.pause();
+      isPlaying=false;
+      playPauseBtn.textContent='▶';
+      cancelAnimationFrame(animationId);
+    }
+  } catch(e){
+    console.log('Error audio:', e);
+  }
+}
+
+// Evento click/touch
+playPauseBtn.addEventListener('click', togglePlay);
+document.addEventListener('touchstart', initAudioContext, {once:true});
+document.addEventListener('click', initAudioContext, {once:true});
+
+// Mantener spectrum si se vuelve visible
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState==='visible' && isPlaying){
     cancelAnimationFrame(animationId);
     animateFakeSpectrum();
   }
-});
-
-// Android instal
-window.addEventListener('beforeinstallprompt', (e)=>{
-  e.preventDefault(); deferredPrompt=e; installBubble.style.display='block';
-});
-installBubble.addEventListener('click', async ()=>{
-  installBubble.style.display='none';
-  if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }
-});
-
-// iOS instal
-function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
-function isInStandaloneMode(){ return ('standalone' in window.navigator)&&window.navigator.standalone; }
-document.addEventListener('DOMContentLoaded', ()=>{
-  if(isIos()&&!isInStandaloneMode()&&!localStorage.getItem('iosPromptShown')) iosInstallPrompt.style.display='block';
-});
-closeIosPromptBtn.addEventListener('click', ()=>{
-  iosInstallPrompt.style.display='none';
-  localStorage.setItem('iosPromptShown','true');
-});
-
-// PELI
-peliBubble.addEventListener('click', ()=>{
-  if(isPlaying){ audio.pause(); cancelAnimationFrame(animationId); }
-  peliWindow = window.open('peli.html','_blank','width='+screen.width+',height='+screen.height+',fullscreen=yes');
-  window.addEventListener('message', (e)=>{
-    if(e.data==='adPlaying'){
-      const soundBubble = document.createElement('button');
-      soundBubble.id='adSoundBubble';
-      soundBubble.textContent='🔊 Activar sonido';
-      soundBubble.style.position='fixed';
-      soundBubble.style.bottom='50px';
-      soundBubble.style.right='20px';
-      soundBubble.style.background='rgba(255,255,255,0.9)';
-      soundBubble.style.color='#000';
-      soundBubble.style.border='none';
-      soundBubble.style.borderRadius='25px';
-      soundBubble.style.padding='10px 15px';
-      soundBubble.style.fontSize='14px';
-      soundBubble.style.cursor='pointer';
-      soundBubble.style.zIndex='10003';
-      document.body.appendChild(soundBubble);
-      soundBubble.onclick = ()=>{
-        e.source.postMessage('unmute','*');
-        soundBubble.remove();
-      };
-    }
-    if(e.data==='adEnded'){
-      const existingBubble=document.getElementById('adSoundBubble');
-      if(existingBubble) existingBubble.remove();
-    }
-    if(e.data==='resumeRadio'){
-      startAudio();
-    }
-  });
 });
 </script>
 </body>
