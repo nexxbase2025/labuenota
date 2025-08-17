@@ -104,44 +104,41 @@ async function playAd(){
   movie.querySelector('source').type = "video/mp4";
   movie.load();
 
-  // Android: autoplay seguro en mute
+  // Android: autoplay en mute y mostrar burbuja SIEMPRE
   if(isAndroid){
     movie.muted = true;
     try{ 
       await movie.play(); 
-    } catch(e){
-      activateSound.style.display = 'block';
-    }
+    } catch(e){}
+    activateSound.style.display = 'block';
   } else {
     movie.muted = false;
     movie.play().catch(()=>{});
   }
 
-  // Mostrar burbuja de sonido solo en Android
-  activateSound.style.display = isAndroid ? 'block' : 'none';
+  // Acción del botón de sonido
   activateSound.onclick = () => {
     movie.muted = false;
     movie.play().catch(()=>{});
     activateSound.style.display = 'none';
   };
 
-  // Al terminar el anuncio, volver a la película rápidamente
+  // Al terminar el anuncio, volver a la película sin demora
   const onAdEnded = () => {
     movie.removeEventListener('ended', onAdEnded);
 
+    // Restaurar película inmediatamente
     movie.src = originalSrc;
     movie.querySelector('source').type = originalType;
     movie.load();
 
-    // Restaurar tiempo donde se pausó
-    movie.currentTime = movieTimeBeforeAd;
-
-    movie.muted = false;
-    movie.play().catch(()=>{});
-    adPlaying = false;
-
-    // Ocultar burbuja al terminar
-    activateSound.style.display = 'none';
+    movie.addEventListener("loadedmetadata", () => {
+      movie.currentTime = movieTimeBeforeAd;
+      movie.muted = false;
+      movie.play().catch(()=>{});
+      adPlaying = false;
+      activateSound.style.display = 'none';
+    }, {once:true});
   };
   movie.addEventListener('ended', onAdEnded);
 }
