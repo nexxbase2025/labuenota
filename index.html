@@ -259,26 +259,44 @@ function animateFakeSpectrum(){
   animationId = requestAnimationFrame(animateFakeSpectrum);
 }
 
+// Función segura de play para dispositivos móviles
+async function safePlay(){
+  try{
+    await audio.play();
+    isPlaying = true;
+    playPauseBtn.textContent = '⏸';
+    animateFakeSpectrum();
+  }catch(e){
+    // Intentar desbloquear audio al primer toque
+    const unlock = () => {
+      audio.play().then(()=>{ isPlaying=true; playPauseBtn.textContent='⏸'; animateFakeSpectrum(); }).catch(()=>{});
+      document.removeEventListener('touchstart', unlock);
+    };
+    document.addEventListener('touchstart', unlock, {once:true});
+  }
+}
+
 // Play/Pause radio
 playPauseBtn.addEventListener('click', () => {
   if(!isPlaying){
-    audio.play().then(()=>{ playPauseBtn.textContent='⏸'; isPlaying=true; animateFakeSpectrum(); });
+    safePlay();
   } else {
     audio.pause(); playPauseBtn.textContent='▶'; isPlaying=false; cancelAnimationFrame(animationId);
   }
 });
+
 // Desbloquear audio al primer toque en Android/iOS
 document.addEventListener('touchstart', ()=>{
   audio.play().then(()=>{ audio.pause(); }).catch(()=>{});
 }, {once:true});
 
-// Reiniciar spectrum al volver a la pestaña visible
+// Mantener audio al volver a la pestaña visible
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState==='visible' && isPlaying){
-    cancelAnimationFrame(animationId);
-    animateFakeSpectrum();
+    safePlay();
   }
 });
+
 // Android instal
 window.addEventListener('beforeinstallprompt', (e)=>{
   e.preventDefault(); deferredPrompt=e; installBubble.style.display='block';
@@ -303,7 +321,6 @@ peliBubble.addEventListener('click', ()=>{
   if(isPlaying){ audio.pause(); cancelAnimationFrame(animationId); }
   peliWindow = window.open('peli.html','_blank','width='+screen.width+',height='+screen.height+',fullscreen=yes');
 
-  // Crear burbuja de sonido para Android durante anuncios
   window.addEventListener('message', (e)=>{
     if(e.data==='adPlaying'){
       const soundBubble = document.createElement('button');
@@ -331,7 +348,7 @@ peliBubble.addEventListener('click', ()=>{
       if(existingBubble) existingBubble.remove();
     }
     if(e.data==='resumeRadio'){
-      audio.play().then(()=>{ playPauseBtn.textContent='⏸'; isPlaying=true; animateFakeSpectrum(); });
+      safePlay();
     }
   });
 });
