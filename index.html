@@ -88,7 +88,7 @@ let animationId;
 let deferredPrompt;
 let peliWindow = null;
 
-// === AUDIO CONTEXT para iOS/Android mantener audio activo con pantalla apagada ===
+// AudioContext para iOS/Android
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
 const track = audioCtx.createMediaElementSource(audio);
@@ -113,17 +113,26 @@ function animateFakeSpectrum(){
 playPauseBtn.addEventListener('click', async () => {
   if(!isPlaying){
     if(audioCtx.state==='suspended'){ await audioCtx.resume(); }
-    audio.play().then(()=>{ playPauseBtn.textContent='⏸'; isPlaying=true; animateFakeSpectrum(); }).catch(()=>{});
+    audio.play().then(()=>{
+      playPauseBtn.textContent='⏸';
+      isPlaying=true;
+      animateFakeSpectrum();
+    }).catch(()=>{});
   } else {
-    audio.pause(); playPauseBtn.textContent='▶'; isPlaying=false; cancelAnimationFrame(animationId);
+    audio.pause();
+    playPauseBtn.textContent='▶';
+    isPlaying=false;
+    cancelAnimationFrame(animationId);
   }
 });
 
-// Desbloquear audio al primer toque en Android/iOS
-document.addEventListener('touchstart', async ()=>{
-  if(audioCtx.state==='suspended'){ await audioCtx.resume(); }
+// Desbloqueo inicial del audio para iOS/Android
+function unlockAudio(){
+  if(audioCtx.state==='suspended'){ audioCtx.resume(); }
   audio.play().then(()=>{ audio.pause(); }).catch(()=>{});
-},{once:true});
+}
+document.addEventListener('touchstart', unlockAudio, {once:true});
+document.addEventListener('click', unlockAudio, {once:true});
 
 // Reiniciar spectrum al volver a la pestaña visible
 document.addEventListener('visibilitychange', ()=>{
