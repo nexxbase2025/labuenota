@@ -238,9 +238,9 @@ let peliWindow = null;
 // ===== MEDIA SESSION PARA PANTALLA DE BLOQUEO =====
 if ('mediaSession' in navigator) {
   navigator.mediaSession.metadata = new MediaMetadata({
-    title: 'LA BUENOTA RADIO ONLINE',      // Nombre que aparece en la pantalla de bloqueo
-    artist: 'Ivibra',                       // Artista o radio
-    album: 'Radio Online',                  // Opcional
+    title: 'LA BUENOTA RADIO ONLINE',
+    artist: 'Ivibra',
+    album: 'Radio Online',
     artwork: [
       { src: 'ivibra.webp', sizes: '96x96', type: 'image/webp' },
       { src: 'ivibra.webp', sizes: '128x128', type: 'image/webp' },
@@ -363,7 +363,11 @@ closeIosPromptBtn.addEventListener('click', ()=>{
 
 // PELI
 peliBubble.addEventListener('click', ()=>{
-  if(isPlaying){ audio.pause(); cancelAnimationFrame(animationId); }
+  if(isPlaying){
+    audio.manualPaused = true; // ← línea agregada para pausar correctamente Android
+    audio.pause();
+    cancelAnimationFrame(animationId);
+  }
   peliWindow = window.open('peli.html','_blank','width='+screen.width+',height='+screen.height+',fullscreen=yes');
 
   window.addEventListener('message', (e)=>{
