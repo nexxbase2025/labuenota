@@ -238,9 +238,9 @@ let peliWindow = null;
 // ===== MEDIA SESSION PARA PANTALLA DE BLOQUEO =====
 if ('mediaSession' in navigator) {
   navigator.mediaSession.metadata = new MediaMetadata({
-    title: 'LA BUENOTA RADIO ONLINE',      // Nombre que aparece en la pantalla de bloqueo
-    artist: 'Ivibra',                       // Artista o radio
-    album: 'Radio Online',                  // Opcional
+    title: 'LA BUENOTA RADIO ONLINE',
+    artist: 'Ivibra',
+    album: 'Radio Online',
     artwork: [
       { src: 'ivibra.webp', sizes: '96x96', type: 'image/webp' },
       { src: 'ivibra.webp', sizes: '128x128', type: 'image/webp' },
@@ -283,7 +283,7 @@ function animateFakeSpectrum(){
   animationId = requestAnimationFrame(animateFakeSpectrum);
 }
 
-// Función mejorada de reproducción en Android/iOS sin pausas automáticas
+// Función mejorada de reproducción
 function playRadio(){
   audio.manualPaused = false;
   audio.play().then(()=>{
@@ -308,21 +308,21 @@ playPauseBtn.addEventListener('click', ()=>{
   }
 });
 
-// Desbloquear audio al primer toque (Android/iOS)
+// Desbloquear audio primer toque
 document.addEventListener('touchstart', ()=>{
   if(audio.paused && !isPlaying){
     audio.play().then(()=>audio.pause()).catch(()=>{});
   }
 },{once:true});
 
-// Reintentar reproducción si audio se detiene inesperadamente
+// Reintentar si se corta
 audio.addEventListener('pause', ()=>{
   if(isPlaying && !audio.manualPaused){
     setTimeout(()=>playRadio(),500);
   }
 });
 
-// Reiniciar spectrum al volver visible
+// Reiniciar spectrum
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState==='visible' && isPlaying){
     animateFakeSpectrum();
@@ -352,7 +352,16 @@ closeIosPromptBtn.addEventListener('click', ()=>{
 
 // PELI
 peliBubble.addEventListener('click', ()=>{
-  if(isPlaying){ audio.pause(); cancelAnimationFrame(animationId); }
+  // ==== PAUSA DEFINITIVA DE RADIO AL ENTRAR A LA PELI ====
+  if(isPlaying){
+    audio.manualPaused = true;  // <- marca que fue pausa manual
+    audio.pause();
+    playPauseBtn.textContent='▶';
+    isPlaying = false;
+    cancelAnimationFrame(animationId);
+  }
+  // ======================================================
+
   peliWindow = window.open('peli.html','_blank','width='+screen.width+',height='+screen.height+',fullscreen=yes');
 
   window.addEventListener('message', (e)=>{
@@ -381,9 +390,8 @@ peliBubble.addEventListener('click', ()=>{
       const existingBubble = document.getElementById('adSoundBubble');
       if(existingBubble) existingBubble.remove();
     }
-    if(e.data==='resumeRadio'){
-      playRadio();
-    }
+    // 👇 quitamos el "resumeRadio" para que NO se reactive sola
+    // if(e.data==='resumeRadio'){ playRadio(); }
   });
 });
 </script>
