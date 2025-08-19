@@ -1,230 +1,142 @@
 
 /* RESET */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 /* BODY Y FONDO */
 body {
   margin: 0;
-  background: url('fondo1.webp') no-repeat center center fixed;
-  background-size: cover;
-  font-family: sans-serif;
-  height: 100vh;
+  background: linear-gradient(120deg, #000000, #ff0000, #c35500);
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+  font-family: Arial, sans-serif;
+  color: #fff;
   overflow-x: hidden;
   overflow-y: auto;
+  height: 100vh;
 }
 
-/* BURBUJA INSTALAR ANDROID */
-#install-bubble {
-  position: fixed;
-  bottom: 80px;
-  right: 20px;
-  background: #40a8f4;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 25px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 10000;
-  user-select: none;
-  font-family: Arial, sans-serif;
-  transition: transform 0.3s ease;
-  display: none;
-}
-#install-bubble:hover {
-  background: #1f75d1;
-  transform: scale(1.05);
-}
-
-/* CUADRO INFO IOS */
-#iosInstallBanner {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 14px 20px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: bold;
-  z-index: 100000; /* por si acaso, más alto que todo */
-  display: none;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-  text-align: center;
-}
-#iosInstallBanner button {
-  margin-top: 10px;
-  background: #25d366;
-  border: none;
-  border-radius: 20px;
-  padding: 6px 12px;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  width: 100%;
-  font-size: 14px;
-}
-
-/* BOTONES REDES SOCIALES */
-.social-bubbles {
-  position: fixed;
-  top: 50%;
-  right: 20px;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  z-index: 9999;
-}
-
-.social-bubbles a {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background-color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: float 3s ease-in-out infinite;
-}
-
-.social-bubbles a:hover {
-  transform: scale(1.15);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
-}
-
-.social-bubbles img {
-  width: 24px;
-  height: 24px;
-}
-
-/* ANIMACIÓN FLOTAR BOTONES */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-/* REPRODUCTOR */
-.radio-player {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: rgba(0,0,0,0.6);
-  padding: 10px 20px;
-  border-radius: 30px;
-  z-index: 9999;
-}
-
-.play-btn {
-  width: 60px;
-  height: 60px;
-  border: none;
-  border-radius: 50%;
-  background: #1e1e1e;
-  color: #fff;
-  font-size: 30px;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 0 20px rgba(0,0,0,0.3);
-}
-
-/* BARRAS DEL SPECTRUM */
-.spectrum {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 4px;
-  height: 40px;
-  width: 150px;
-  margin: auto;
-  margin-top: 10px;
-  z-index: 999;
-}
-
-.bar {
-  width: 4px;
-  background: lime;
-  animation: bounce 1s infinite ease-in-out;
-  transition: height 0.1s ease;
-}
-
-/* MEDIA QUERIES PARA MÓVILES PEQUEÑOS */
-@media (max-width: 400px) {
-  .play-btn {
-    width: 50px;
-    height: 50px;
-    font-size: 24px;
-  }
-  .spectrum {
-    height: 30px;
-  }
-  .bar {
-    width: 4px;
-  }
-  #install-bubble {
-    bottom: 60px;
-    right: 10px;
-    padding: 10px 15px;
-    font-size: 14px;
-  }
-}
-
+/* LOGO */
 #logo {
-  width: 200px;
+  width: 300px;
   position: fixed;
-  top: 80px;
+  top: 5px;
   left: 50%;
   transform: translateX(-50%);
   transition: transform 0.1s ease;
   z-index: 9999;
 }
 
-/* NUEVO: BURBUJA ACTIVAR SONIDO ANDROID */
-#activateSound {
+/* BURBUJA PELI */
+#peli-bubble {
   position: fixed;
-  bottom: 120px;      /* Ajustable */
-  right: 20px;        /* Cambia a left:20px si prefieres */
-  background: rgba(255,255,255,0.95);
-  color: #000;
-  border: none;
+  bottom: 400px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f1bd02;
+  color: rgb(4, 4, 4);
+  padding: 10px 15px;
   border-radius: 25px;
-  padding: 12px 20px;
-  font-size: 16px;
   font-weight: bold;
+  font-size: 15px;
   cursor: pointer;
-  display: none;      /* Se mostrará dinámicamente */
-  z-index: 100000;    /* Sobre todo */
-  box-shadow: 0 0 15px #ffffffaa;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 0 15px #ffffff;
+  z-index: 10002;
+  text-align: center;
+  white-space: nowrap;
+  display: inline-block;
 }
 
-/* Ajuste en horizontal para Android */
-@media screen and (orientation: landscape) and (max-width: 1024px) {
-  #activateSound {
-    bottom: 50px;
-    right: 30px;
-  }
+/* SOCIAL ROW ABAJO */
+.social-row-abajo {
+  position: fixed;
+  bottom: 125px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 15px;
+  z-index: 10001;
 }
+.social-row-abajo a {
+  background: #fff;
+  padding: 4px;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+.social-row-abajo a:hover { transform: scale(1.15); }
+.social-row-abajo img { width: 40px; height: 40px; }
 
-/* Ajustes para móviles pequeños */
-@media (max-width: 400px){
-  #activateSound {
-    padding: 10px 15px;
-    font-size: 14px;
-    bottom: 40px;
-    right: 15px;
-  }
+/* GALLERY */
+.gallery-scroll {
+  position: fixed;
+  bottom: 200px;
+  left: 0;
+  width: 100%;
+  overflow-x: auto;
+  display: flex;
+  gap: 10px;
+  padding-left: 50vw;
+  padding-right: 50vw;
+  box-sizing: border-box;
+  z-index: 9998;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  justify-content: flex-start;
+  scroll-padding-left: 50vw;
+  scroll-padding-right: 50vw;
 }
+.gallery-item { flex: 0 0 auto; width: 70vw; aspect-ratio: 16 / 9; scroll-snap-align: center; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.6); }
+.gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 12px; }
+
+/* RADIO PLAYER */
+.radio-player {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  padding: 12px 20px;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 0 20px;
+  z-index: 10002;
+}
+.play-btn {
+  font-size: 26px;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: #f1bd02;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 0 10px #f1bd02;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+}
+.play-btn:focus { outline: 2px solid #fff; }
+
+/* BARRAS DEL SPECTRUM */
+.spectrum { display: flex; justify-content: center; align-items: flex-end; gap: 4px; height: 40px; width: 150px; margin: auto; margin-top: 10px; z-index: 999; }
+.bar { width: 4px; background: lime; animation: bounce 1s infinite ease-in-out; transition: height 0.1s ease; }
+
+/* BURBUJA INSTALAR */
+#install-bubble { position: fixed; bottom: 120px; right: 20px; background: #eaff00; color: #050505; padding: 10px 15px; border-radius: 25px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 0 15px #ff6a00cc; z-index: 99999; display:none; text-align:center; }
+
+/* BURBUJA IOS */
+#ios-install-prompt { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); color: white; padding: 16px; border-radius: 12px; font-size: 14px; text-align: center; z-index: 99999; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display:none; }
+#ios-install-prompt button { margin-top: 8px; background: #ff4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+/* BURBUJA ACTIVAR SONIDO ANDROID */
+#activateSound { position: fixed; bottom: 120px; right: 20px; background: rgba(255,255,255,0.95); color: #000; border: none; border-radius: 25px; padding: 12px 20px; font-size: 16px; font-weight: bold; cursor: pointer; display: none; z-index: 100000; box-shadow: 0 0 15px #ffffffaa; transition: opacity 0.3s ease, transform 0.3s ease; }
+
+/* ANIMACIONES */
+@keyframes gradientAnimation { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+@keyframes bounce { 0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1)} }

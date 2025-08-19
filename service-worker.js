@@ -1,4 +1,5 @@
 
+
 /* service-worker.js */
 const CACHE_NAME = 'la-buenota-radio-online-v3'; // Cambia versión si modificas recursos
 const STATIC_ASSETS = [
