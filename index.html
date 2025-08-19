@@ -235,6 +235,7 @@ let isPlaying = false;
 let animationId;
 let deferredPrompt;
 let peliWindow = null;
+
 // ===== MEDIA SESSION PARA PANTALLA DE BLOQUEO =====
 if ('mediaSession' in navigator) {
   navigator.mediaSession.metadata = new MediaMetadata({
@@ -264,7 +265,6 @@ if ('mediaSession' in navigator) {
     cancelAnimationFrame(animationId);
   });
 }
-// ================================================
 
 // Crear barras espectro
 const bars = [];
@@ -341,34 +341,33 @@ document.addEventListener('visibilitychange', ()=>{
   }
 });
 
-// Android instal
+// ===== INSTALACIÓN ANDROID Y IOS =====
+
+// Android install: burbuja compatible con cualquier dispositivo
 window.addEventListener('beforeinstallprompt', (e)=>{
   e.preventDefault();
   deferredPrompt = e;
-  installBubble.style.display = 'block'; // mostrar burbuja
+  // Mostrar la burbuja solo si no está instalada
+  if(!window.matchMedia('(display-mode: standalone)').matches){
+    installBubble.style.display='block';
+  }
 });
-
 installBubble.addEventListener('click', async ()=>{
-  if (deferredPrompt) {
+  installBubble.style.display='none';
+  if(deferredPrompt){
     deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
-    if (choice.outcome === 'accepted') {
-      console.log('App instalada');
-      installBubble.style.display = 'none';
-      deferredPrompt = null;
-    } else {
-      console.log('Instalación cancelada');
-      // volver a mostrar burbuja si cancelan
-      installBubble.style.display = 'block';
-    }
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
   }
 });
 
-// iOS instal
+// iOS install
 function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
 function isInStandaloneMode(){ return ('standalone' in window.navigator)&&window.navigator.standalone; }
 document.addEventListener('DOMContentLoaded', ()=>{
-  if(isIos()&&!isInStandaloneMode()&&!localStorage.getItem('iosPromptShown')) iosInstallPrompt.style.display='block';
+  if(isIos()&&!isInStandaloneMode()&&!localStorage.getItem('iosPromptShown')){
+    iosInstallPrompt.style.display='block';
+  }
 });
 closeIosPromptBtn.addEventListener('click', ()=>{
   iosInstallPrompt.style.display='none';
@@ -378,7 +377,7 @@ closeIosPromptBtn.addEventListener('click', ()=>{
 // PELI
 peliBubble.addEventListener('click', ()=>{
   if(isPlaying){
-    audio.manualPaused = true; // ← línea agregada para pausar correctamente Android
+    audio.manualPaused = true;
     audio.pause();
     cancelAnimationFrame(animationId);
   }
