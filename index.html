@@ -235,7 +235,6 @@ let isPlaying = false;
 let animationId;
 let deferredPrompt;
 let peliWindow = null;
-
 // ===== MEDIA SESSION PARA PANTALLA DE BLOQUEO =====
 if ('mediaSession' in navigator) {
   navigator.mediaSession.metadata = new MediaMetadata({
@@ -265,6 +264,7 @@ if ('mediaSession' in navigator) {
     cancelAnimationFrame(animationId);
   });
 }
+// ================================================
 
 // Crear barras espectro
 const bars = [];
@@ -341,33 +341,20 @@ document.addEventListener('visibilitychange', ()=>{
   }
 });
 
-// ===== INSTALACIÓN ANDROID Y IOS =====
-
-// Android install: burbuja compatible con cualquier dispositivo
+// Android instal
 window.addEventListener('beforeinstallprompt', (e)=>{
-  e.preventDefault();
-  deferredPrompt = e;
-  // Mostrar la burbuja solo si no está instalada
-  if(!window.matchMedia('(display-mode: standalone)').matches){
-    installBubble.style.display='block';
-  }
+  e.preventDefault(); deferredPrompt=e; installBubble.style.display='block';
 });
 installBubble.addEventListener('click', async ()=>{
   installBubble.style.display='none';
-  if(deferredPrompt){
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-  }
+  if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }
 });
 
-// iOS install
+// iOS instal
 function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
 function isInStandaloneMode(){ return ('standalone' in window.navigator)&&window.navigator.standalone; }
 document.addEventListener('DOMContentLoaded', ()=>{
-  if(isIos()&&!isInStandaloneMode()&&!localStorage.getItem('iosPromptShown')){
-    iosInstallPrompt.style.display='block';
-  }
+  if(isIos()&&!isInStandaloneMode()&&!localStorage.getItem('iosPromptShown')) iosInstallPrompt.style.display='block';
 });
 closeIosPromptBtn.addEventListener('click', ()=>{
   iosInstallPrompt.style.display='none';
@@ -377,7 +364,7 @@ closeIosPromptBtn.addEventListener('click', ()=>{
 // PELI
 peliBubble.addEventListener('click', ()=>{
   if(isPlaying){
-    audio.manualPaused = true;
+    audio.manualPaused = true; // ← línea agregada para pausar correctamente Android
     audio.pause();
     cancelAnimationFrame(animationId);
   }
