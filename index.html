@@ -343,11 +343,25 @@ document.addEventListener('visibilitychange', ()=>{
 
 // Android instal
 window.addEventListener('beforeinstallprompt', (e)=>{
-  e.preventDefault(); deferredPrompt=e; installBubble.style.display='block';
+  e.preventDefault();
+  deferredPrompt = e;
+  installBubble.style.display = 'block'; // mostrar burbuja
 });
+
 installBubble.addEventListener('click', async ()=>{
-  installBubble.style.display='none';
-  if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    if (choice.outcome === 'accepted') {
+      console.log('App instalada');
+      installBubble.style.display = 'none';
+      deferredPrompt = null;
+    } else {
+      console.log('Instalación cancelada');
+      // volver a mostrar burbuja si cancelan
+      installBubble.style.display = 'block';
+    }
+  }
 });
 
 // iOS instal
