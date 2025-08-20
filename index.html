@@ -20,10 +20,8 @@
   padding: 10px 0;
   box-shadow: 0 2px 10px rgba(0,0,0,0.5);
   z-index: 50;
-
-  /* CAMBIO PRINCIPAL PARA FIJAR LA BARRA */
   position: fixed; 
-  top: calc(40px + 150px + 80px); /* ajusta el +20px para bajarla más o menos */
+  top: calc(40px + 150px + 80px); 
   left: 0;
 }
   #top-bar button {
@@ -47,9 +45,18 @@
 <img src="ivibra.webp" id="logo" alt="Logo Ivibra" />
 
 <div id="top-bar">
-  <button onclick="abrirPagina('artistas.html')">🎤 Artistas</button>
-  <button onclick="abrirPagina('clientes.html')">🏢 Clientes</button>
-  <button onclick="compartirApp()">📲 Compartir app</button>
+  <button class="bubble" onclick="abrirPagina('artistas.html')">
+    <span style="display:block;">Nuestros</span>
+    <span style="display:block;">Artistas</span>
+  </button>
+  <button class="bubble" onclick="abrirPagina('clientes.html')">
+    <span style="display:block;">Nuestros</span>
+    <span style="display:block;">Clientes</span>
+  </button>
+  <button class="bubble" onclick="compartirApp()">
+    <span style="display:block;">Compartir</span>
+    <span style="display:block;">App</span>
+  </button>
 </div>
 
 <div id="peli-bubble">🎬 LA PELI DE LA SEMANA</div>
@@ -86,7 +93,6 @@
   // NAVEGACIÓN SEGURA PARA ARTISTAS Y CLIENTES
   // ========================================
   function abrirPagina(pagina){
-    // Abrir siempre en la misma ventana, compatible PWA
     window.open(pagina, '_self');
   }
 
