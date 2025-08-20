@@ -11,75 +11,53 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="style.css" />
 <style>
-  /* ===== LOGO ===== */
-  #logo {
-    display: block;
-    margin: 40px auto 0 auto; /* un poquito más arriba */
-    width: 150px;
-  }
-
-  /* ===== BARRA DE BOTONES ===== */
   #top-bar {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    width: 90%;
-    margin: 20px auto; /* debajo del logo */
-    background: #111;
-    padding: 10px 0;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    z-index: 50;
-    position: relative;
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    width:100%;
+    margin-top: 270px;
+    background:#111;
+    padding:10px 0;
+    box-shadow:0 2px 10px rgba(0,0,0,0.5);
+    z-index:50;
+    position:relative;
   }
-
   #top-bar button {
-    background: var(--accent,#ffcc00);
-    border: none;
-    padding: 10px 16px;
-    border-radius: 999px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: clamp(12px,2vw,16px);
-    color: #000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  }
-
-  /* ===== BURBUJA PELI ===== */
-  #peli-bubble {
-    position: relative; /* relativo a flujo normal */
-    display: block;
-    margin: 20px auto;
-    padding: 12px 20px;
-    background: var(--accent,#ffcc00);
-    border-radius: 999px;
-    font-weight: 700;
-    cursor: pointer;
-    text-align: center;
-    max-width: 90%;
-    z-index: 100;
+    background:var(--accent,#ffcc00);
+    border:none;
+    padding:10px 16px;
+    border-radius:999px;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:clamp(12px,2vw,16px);
+    color:#000;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
   }
 </style>
 </head>
 <body>
 
-<!-- LOGO -->
 <img src="ivibra.webp" id="logo" alt="Logo Ivibra" />
 
-<!-- BARRA DE BOTONES -->
 <div id="top-bar">
   <button onclick="abrirPagina('artistas.html')">🎤 Artistas</button>
   <button onclick="abrirPagina('clientes.html')">🏢 Clientes</button>
   <button onclick="compartirApp()">📲 Compartir app</button>
 </div>
 
-<!-- PELI DE LA SEMANA -->
 <div id="peli-bubble">🎬 LA PELI DE LA SEMANA</div>
 
-<!-- GALERÍA -->
+<nav class="social-row-abajo" aria-label="Redes sociales">
+  <a href="https://wa.me/593984827009" target="_blank" rel="noopener"><img src="what.webp" alt="WhatsApp" /></a>
+  <a href="https://www.facebook.com/labuenotaradioonline" target="_blank" rel="noopener"><img src="face.webp" alt="Facebook" /></a>
+  <a href="https://www.instagram.com/guillermo_villagran_delgado/reel/DGLaDCZJuHX/" target="_blank" rel="noopener"><img src="ins.webp" alt="Instagram" /></a>
+  <a href="https://www.tiktok.com/@radiomaxsoloexitos" target="_blank" rel="noopener"><img src="tik.webp" alt="TikTok" /></a>
+</nav>
+
 <div class="gallery-scroll">
   <div class="gallery-item"><img src="r1.webp" alt="Promo 1" /></div>
   <div class="gallery-item"><img src="r2.webp" alt="Promo 2" /></div>
@@ -89,15 +67,6 @@
   <div class="gallery-item"><img src="r6.webp" alt="Promo 6" /></div>
 </div>
 
-<!-- REDES SOCIALES -->
-<nav class="social-row-abajo" aria-label="Redes sociales">
-  <a href="https://wa.me/593984827009" target="_blank" rel="noopener"><img src="what.webp" alt="WhatsApp" /></a>
-  <a href="https://www.facebook.com/labuenotaradioonline" target="_blank" rel="noopener"><img src="face.webp" alt="Facebook" /></a>
-  <a href="https://www.instagram.com/guillermo_villagran_delgado/reel/DGLaDCZJuHX/" target="_blank" rel="noopener"><img src="ins.webp" alt="Instagram" /></a>
-  <a href="https://www.tiktok.com/@radiomaxsoloexitos" target="_blank" rel="noopener"><img src="tik.webp" alt="TikTok" /></a>
-</nav>
-
-<!-- REPRODUCTOR -->
 <div class="radio-player">
   <button class="play-btn" id="playPauseBtn">▶</button>
   <div class="spectrum" id="spectrum"></div>
@@ -113,19 +82,24 @@
 
 <script src="app.js"></script>
 <script>
-  // NAVEGACIÓN SEGURA
+  // ========================================
+  // NAVEGACIÓN SEGURA PARA ARTISTAS Y CLIENTES
+  // ========================================
   function abrirPagina(pagina){
-    window.open(pagina,'_self'); // abre siempre en la misma ventana
+    // Abrir siempre en la misma ventana, compatible PWA
+    window.open(pagina, '_self');
   }
 
+  // ========================================
   // BOTÓN COMPARTIR
+  // ========================================
   function compartirApp(){
-    const url="https://tusitio.vercel.app";
-    const text="¡Mira la app de La Buenota Radio Online!";
+    const url = "https://tusitio.vercel.app";
+    const text = "¡Mira la app de La Buenota Radio Online!";
     if(navigator.share){
       navigator.share({title:"La Buenota Radio Online", text, url}).catch(console.error);
-    }else{
-      alert("Comparte el enlace: "+url);
+    } else {
+      alert("Comparte el enlace: " + url);
     }
   }
 </script>
