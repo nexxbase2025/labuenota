@@ -72,7 +72,7 @@ body {
 /* GALLERY */
 .gallery-scroll {
   position: fixed;
-  bottom: 180px;
+  bottom: 1175px;
   left: 0;
   width: 100%;
   overflow-x: auto;
