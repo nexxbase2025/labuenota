@@ -17,7 +17,7 @@ body {
 
 /* LOGO */
 #logo {
-  width: 300px;
+  width: 250px;
   position: fixed;
   top: 3px;
   left: 50%;
@@ -29,7 +29,7 @@ body {
 /* BURBUJA PELI */
 #peli-bubble {
   position: fixed;
-  bottom: 350px;
+  bottom: 345px;
   left: 50%;
   transform: translateX(-50%);
   background: #f1bd02;
@@ -72,7 +72,7 @@ body {
 /* GALLERY */
 .gallery-scroll {
   position: fixed;
-  bottom: 175px;
+  bottom: 170px;
   left: 0;
   width: 100%;
   overflow-x: auto;
