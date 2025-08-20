@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Nuestros Clientes</title>
+<style>
+  :root{--gapFactor:0.06;--accent:#ffcc00;}
+  html,body{height:100%;margin:0;background:#000;color:#fff;overflow:hidden;font-family:system-ui,Arial,sans-serif;}
+  header{position:fixed;top:0;left:0;right:0;height:56px;display:flex;align-items:center;justify-content:center;background:#0f0f0f;border-bottom:1px solid #2a2a2a;z-index:100;}
+  h1{font-size:16px;margin:0;}
+  .hint{position:fixed;top:58px;right:10px;font-size:12px;opacity:.7;z-index:100;}
+  .zone{position:absolute;top:72px;left:0;right:0;bottom:72px;display:grid;place-items:center;perspective:1400px;}
+  .ring{position:relative;width:100%;height:100%;transform-style:preserve-3d;will-change:transform;}
+  .panel{position:absolute;top:50%;left:50%;translate:-50% -50%;border-radius:16px;overflow:hidden;background:#111;box-shadow:0 10px 28px rgba(0,0,0,.55);backface-visibility:hidden;display:flex;flex-direction:column;}
+  .panel img{width:100%;aspect-ratio:4/5;object-fit:cover;flex-shrink:0;}
+  .info{padding:10px 12px;background:#111;color:#fff;font-size:clamp(13px,2.6vw,16px);line-height:1.4;text-align:center;}
+  .info h3{margin:0 0 4px;font-size:1.1em;color:var(--accent);}
+  .volver{position:fixed;left:50%;bottom:10px;translate:-50% 0;padding:12px 20px;border:none;border-radius:999px;background:var(--accent);color:#000;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.35);z-index:100;}
+</style>
+</head>
+<body>
+<header><h1>🏢 Nuestros Clientes</h1></header>
+<div class="hint">Desliza izquierda / derecha</div>
+<main class="zone">
+  <div class="ring" id="ring-clientes">
+    <figure class="panel"><img src="1 AR.webp" alt="Cliente 1"><div class="info"><h3>Cliente 1</h3><p>Sector o descripción breve</p></div></figure>
+    <figure class="panel"><img src="2 AR.webp" alt="Cliente 2"><div class="info"><h3>Cliente 2</h3><p>Sector o descripción breve</p></div></figure>
+    <figure class="panel"><img src="3 AR.webp" alt="Cliente 3"><div class="info"><h3>Cliente 3</h3><p>Sector o descripción breve</p></div></figure>
+    <figure class="panel"><img src="4 AR.webp" alt="Cliente 4"><div class="info"><h3>Cliente 4</h3><p>Sector o descripción breve</p></div></figure>
+  </div>
+</main>
+<button class="volver" onclick="volver()">⬅ Volver al inicio</button>
+
+<script>
+// Función de volver
+function volver(){
+  location.href='index.html';
+}
+
+// Montaje seguro del cilindro: si falla, no bloquea la página
+function mountCylinder(ringId){
+  try{
+    const ring=document.getElementById(ringId); 
+    const panels=Array.from(ring.children); 
+    const N=panels.length; 
+    let rotY=0;
+
+    function layout(){
+      const zone=ring.closest('.zone'); 
+      const availH=zone.clientHeight; 
+      const h=Math.floor(availH*0.9);
+      let w=Math.floor(h*4/5); 
+      const maxW=Math.floor(window.innerWidth*0.8); 
+      w=Math.min(w,maxW);
+      const finalH=Math.round(w*5/4+60);
+      const gap=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gapFactor'))||0.05;
+      const angle=2*Math.PI/N; 
+      const R=Math.round((w*(1+gap))/(2*Math.sin(angle/2)));
+      panels.forEach((p,i)=>{
+        p.style.width=w+'px'; 
+        p.style.height=finalH+'px'; 
+        const deg=i*(360/N); 
+        p.style.transform=`translate(-50%,-50%) rotateY(${deg}deg) translateZ(${R}px)`;
+      });
+      ring.style.transform=`rotateY(${rotY}deg)`;
+    }
+
+    let dragging=false, startX=0; 
+    const speed=0.35;
+
+    const onDown=e=>{
+      dragging=true;
+      startX=(e.touches?e.touches[0].clientX:e.clientX);
+    };
+    const onMove=e=>{
+      if(!dragging) return;
+      const x=(e.touches?e.touches[0].clientX:e.clientX); 
+      rotY+=(x-startX)*speed; 
+      ring.style.transform=`rotateY(${rotY}deg)`; 
+      startX=x;
+    };
+    const onUp=()=>dragging=false;
+
+    ring.addEventListener('mousedown',onDown); 
+    ring.addEventListener('touchstart',onDown,{passive:false});
+    window.addEventListener('mousemove',onMove,{passive:false}); 
+    window.addEventListener('touchmove',onMove,{passive:false});
+    window.addEventListener('mouseup',onUp); 
+    window.addEventListener('touchend',onUp);
+    window.addEventListener('resize',layout); 
+    window.addEventListener('orientationchange',layout);
+
+    layout();
+  } catch(e){
+    console.warn("mountCylinder falló pero la página sigue funcionando:", e);
+  }
+}
+
+// Activar cilindro seguro
+mountCylinder('ring-clientes');
+</script>
+</body>
+</html>

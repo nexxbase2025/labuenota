@@ -1,0 +1,34 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Compartir App</title>
+<style>
+  html,body{height:100%;margin:0;background:#000;color:#fff;font-family:system-ui,Arial,sans-serif;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+  h1{color:#ffcc00;margin-bottom:20px;}
+  button{padding:12px 20px;margin:8px;border:none;border-radius:999px;background:#ffcc00;color:#000;font-weight:800;cursor:pointer;font-size:16px;}
+</style>
+</head>
+<body>
+<h1>📲 Compartir App</h1>
+<button onclick="compartir()">Compartir ahora</button>
+
+<script>
+function compartir(){
+  const url="https://tusitio.vercel.app"; // reemplaza por tu enlace
+  const text="¡Mira la app de La Buenota Radio Online!";
+  if(navigator.share){
+    navigator.share({
+      title:"La Buenota Radio Online",
+      text:text,
+      url:url
+    }).catch(console.error);
+  }else{
+    prompt("Copia el enlace para compartir:", url);
+  }
+}
+</script>
+</body>
+</html>

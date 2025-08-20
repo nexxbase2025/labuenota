@@ -10,10 +10,44 @@
 <title>LA BUENOTA RADIO ONLINE</title>
 <link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="style.css" />
+<style>
+  #top-bar {
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    width:100%;
+    background:#111;
+    padding:10px 0;
+    box-shadow:0 2px 10px rgba(0,0,0,0.5);
+    z-index:50;
+    position:relative;
+  }
+  #top-bar button {
+    background:var(--accent,#ffcc00);
+    border:none;
+    padding:10px 16px;
+    border-radius:999px;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:clamp(12px,2vw,16px);
+    color:#000;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+  }
+</style>
 </head>
 <body>
 
 <img src="ivibra.webp" id="logo" alt="Logo Ivibra" />
+
+<div id="top-bar">
+  <button onclick="abrirPagina('artistas.html')">🎤 Artistas</button>
+  <button onclick="abrirPagina('clientes.html')">🏢 Clientes</button>
+  <button onclick="compartirApp()">📲 Compartir app</button>
+</div>
+
 <div id="peli-bubble">🎬 LA PELI DE LA SEMANA</div>
 
 <nav class="social-row-abajo" aria-label="Redes sociales">
@@ -45,13 +79,31 @@
   <br /><button id="closeIosPromptBtn">Cerrar</button>
 </div>
 
-<!-- Enlace al JavaScript externo -->
 <script src="app.js"></script>
+<script>
+  // ========================================
+  // NAVEGACIÓN SEGURA PARA ARTISTAS Y CLIENTES
+  // ========================================
+  function abrirPagina(pagina){
+    // Abrir siempre en la misma ventana, compatible PWA
+    window.open(pagina, '_self');
+  }
 
+  // ========================================
+  // BOTÓN COMPARTIR
+  // ========================================
+  function compartirApp(){
+    const url = "https://tusitio.vercel.app";
+    const text = "¡Mira la app de La Buenota Radio Online!";
+    if(navigator.share){
+      navigator.share({title:"La Buenota Radio Online", text, url}).catch(console.error);
+    } else {
+      alert("Comparte el enlace: " + url);
+    }
+  }
+</script>
 </body>
 </html>
-
-
 
 
 
