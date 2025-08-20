@@ -49,7 +49,7 @@ body {
 /* SOCIAL ROW ABAJO */
 .social-row-abajo {
   position: fixed;
-  bottom: 120px;
+  bottom: 110px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
