@@ -223,10 +223,15 @@ body {
 /* CILINDRO DE ARTISTAS */
 .zone {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  display: grid;
-  place-items: center;
+  top: 56px; 
+  left: 0; 
+  right: 0; 
+  bottom: 0;
+  display: flex;
+  align-items: flex-start;  /* sube el cilindro hacia arriba */
+  justify-content: center;
   perspective: 1400px;
+  padding-top: 40px;        /* separa un poco del header, ajusta este valor si quieres más o menos */
 }
 .ring {
   position: relative;

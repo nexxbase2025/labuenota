@@ -4,12 +4,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nuestros Artistas</title>
+  <title>NUESTROS ARTISTAS</title>
   <style>
     html, body {
       margin: 0; padding: 0; overflow: hidden;
       height: 100%; width: 100%;
-      background: #000; font-family: Arial, sans-serif;
+      background: #9b4601; font-family: Arial, sans-serif;
     }
 
     header {
@@ -21,9 +21,16 @@
     header h1 { margin:0; font-size:16px; color:#fff; }
 
     .zone {
-      position: absolute; top:56px; left:0; right:0; bottom:0;
-      display:flex; align-items:center; justify-content:center;
+      position: absolute;
+      top: 56px; 
+      left: 0; 
+      right: 0; 
+      bottom: 0;
+      display: flex;
+      align-items: flex-start;  /* sube el cilindro hacia arriba */
+      justify-content: center;
       perspective: 1400px;
+      padding-top: 50px;        /* separa un poco del header */
     }
 
     .cylinder {
@@ -63,8 +70,23 @@
     }
     .info h3 { margin:0 0 4px; color:#ffcc00; }
 
+    .info .whatsapp-btn {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      background: #25D366;
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .info .whatsapp-btn:hover {
+      background: #1ebe5d;
+    }
+
     .volver {
-      position: fixed; left:50%; bottom:10px;
+      position: fixed; left:50%; bottom:40px;
       transform: translateX(-50%);
       padding:12px 20px; background:#ffcc00;
       color:#000; font-weight:800; border:none;
@@ -74,25 +96,41 @@
   </style>
 </head>
 <body>
-<header><h1>🎤 Nuestros Artistas</h1></header>
+<header><h1>🎤 NUESTROS ARTISTAS</h1></header>
 
 <main class="zone">
   <div class="cylinder" id="cylinder">
     <div class="panel">
       <img src="1 AR.webp" alt="Artista 1">
-      <div class="info"><h3>Artista 1</h3><p>Reggaetón · Mejor exponente</p></div>
+      <div class="info">
+        <h3>DON BELTRAN</h3>
+        <p>Contácta a Don Beltrán para un demo GRATIS!</p>
+        <a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a>
+      </div>
     </div>
     <div class="panel">
       <img src="2 AR.webp" alt="Artista 2">
-      <div class="info"><h3>Artista 2</h3><p>Salsa · Biografía corta</p></div>
+      <div class="info">
+        <h3>Artista 2</h3>
+        <p>Contáctanos y reserva este espacio para ti!</p>
+        <a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a>
+      </div>
     </div>
     <div class="panel">
       <img src="3 AR.webp" alt="Artista 3">
-      <div class="info"><h3>Artista 3</h3><p>Bachata · Biografía corta</p></div>
+      <div class="info">
+        <h3>Artista 3</h3>
+        <p>Contáctanos y reserva este espacio para ti!</p>
+        <a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a>
+      </div>
     </div>
     <div class="panel">
       <img src="4 AR.webp" alt="Artista 4">
-      <div class="info"><h3>Artista 4</h3><p>Mambo · Biografía corta</p></div>
+      <div class="info">
+        <h3>Artista 4</h3>
+        <p>Contáctanos y reserva este espacio para ti!</p>
+        <a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a>
+      </div>
     </div>
   </div>
 </main>

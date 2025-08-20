@@ -4,12 +4,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nuestros Clientes</title>
+  <title>NUESTROS CLIENTES</title>
   <style>
     html, body {
       margin: 0; padding: 0; overflow: hidden;
       height: 100%; width: 100%;
-      background: #000; font-family: Arial, sans-serif;
+      background: #9b4601; font-family: Arial, sans-serif;
     }
 
     header {
@@ -21,15 +21,22 @@
     header h1 { margin:0; font-size:16px; color:#fff; }
 
     .zone {
-      position: absolute; top:56px; left:0; right:0; bottom:0;
-      display:flex; align-items:center; justify-content:center;
+      position: absolute;
+      top: 56px; 
+      left: 0; 
+      right: 0; 
+      bottom: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
       perspective: 1400px;
+      padding-top: 50px;
     }
 
     .cylinder {
       position: relative;
       width: min(70vw, 300px);
-      height: calc(min(70vw, 300px) * 1.25); /* 4:5 */
+      height: calc(min(70vw, 300px) * 1.25);
       transform-style: preserve-3d;
       transform: rotateY(0deg);
       transition: transform 0.4s ease-out;
@@ -63,8 +70,23 @@
     }
     .info h3 { margin:0 0 4px; color:#ffcc00; }
 
+    .info .whatsapp-btn {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      background: #25D366;
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .info .whatsapp-btn:hover {
+      background: #1ebe5d;
+    }
+
     .volver {
-      position: fixed; left:50%; bottom:10px;
+      position: fixed; left:50%; bottom:40px;
       transform: translateX(-50%);
       padding:12px 20px; background:#ffcc00;
       color:#000; font-weight:800; border:none;
@@ -74,25 +96,41 @@
   </style>
 </head>
 <body>
-<header><h1>🏢 Nuestros Clientes</h1></header>
+<header><h1>🏢 NUESTROS CLIENTES</h1></header>
 
 <main class="zone">
   <div class="cylinder" id="cylinder-clientes">
     <div class="panel">
-      <img src="1 AR.webp" alt="Cliente 1">
-      <div class="info"><h3>Cliente 1</h3><p>Sector o descripción breve</p></div>
+      <img src="c1.webp" alt="Cliente 1">
+      <div class="info">
+        <h3>DON BELTRAN</h3>
+        <p>Productor Digital, spots publicitarios, apps, páginas web y más!</p>
+        <a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a>
+      </div>
     </div>
     <div class="panel">
-      <img src="2 AR.webp" alt="Cliente 2">
-      <div class="info"><h3>Cliente 2</h3><p>Sector o descripción breve</p></div>
+      <img src="c2.webp" alt="Cliente 2">
+      <div class="info">
+        <h3>Cliente 2</h3>
+        <p>Contáctanos y reserva este espacio para ti!</p>
+        <a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a>
+      </div>
     </div>
     <div class="panel">
-      <img src="3 AR.webp" alt="Cliente 3">
-      <div class="info"><h3>Cliente 3</h3><p>Sector o descripción breve</p></div>
+      <img src="c3.webp" alt="Cliente 3">
+      <div class="info">
+        <h3>Cliente 3</h3>
+        <p>Contáctanos y reserva este espacio para ti!</p>
+        <a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a>
+      </div>
     </div>
     <div class="panel">
-      <img src="4 AR.webp" alt="Cliente 4">
-      <div class="info"><h3>Cliente 4</h3><p>Sector o descripción breve</p></div>
+      <img src="c4.webp" alt="Cliente 4">
+      <div class="info">
+        <h3>Cliente 4</h3>
+        <p>Contáctanos y reserva este espacio para ti!</p>
+        <a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a>
+      </div>
     </div>
   </div>
 </main>
@@ -106,7 +144,6 @@
   const angle = 360 / total;
   let rotationY = 0;
 
-  // Distribuir las caras en el cilindro
   function positionPanels() {
     const radius = (cylinder.offsetWidth / 2) / Math.tan(Math.PI / total);
     panels.forEach((panel, i) => {
@@ -115,7 +152,6 @@
   }
   positionPanels();
 
-  // Rotación manual con arrastrar
   let dragging = false, startX = 0;
   cylinder.addEventListener('mousedown', e => {
     dragging = true; startX = e.clientX;
