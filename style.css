@@ -49,7 +49,7 @@ body {
 /* SOCIAL ROW ABAJO */
 .social-row-abajo {
   position: fixed;
-  bottom: 125px;
+  bottom: 120px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -72,7 +72,7 @@ body {
 /* GALLERY */
 .gallery-scroll {
   position: fixed;
-  bottom: 200px;
+  bottom: 180px;
   left: 0;
   width: 100%;
   overflow-x: auto;
