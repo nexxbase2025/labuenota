@@ -29,7 +29,7 @@ body {
 /* BURBUJA PELI */
 #peli-bubble {
   position: fixed;
-  bottom: 400px;
+  bottom: 300px;
   left: 50%;
   transform: translateX(-50%);
   background: #f1bd02;
