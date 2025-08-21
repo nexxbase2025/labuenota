@@ -10,6 +10,16 @@
 <title>LA BUENOTA RADIO ONLINE</title>
 <link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="style.css" />
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BQPYB6V4WZ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-BQPYB6V4WZ');
+</script>
+
 <style>
   #top-bar {
     display: flex;
@@ -27,18 +37,18 @@
   #top-bar button {
     background: var(--accent,#ffcc00);
     border: none;
-    padding: 6px 14px;       /* ligeramente más estrecho */
+    padding: 6px 14px;
     border-radius: 999px;
     font-weight: 700;
     cursor: pointer;
     display: flex;
-    flex-direction: column;   /* apila los spans verticalmente */
-    align-items: center;      /* centra horizontalmente */
-    justify-content: center;  /* centra verticalmente */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     font-size: clamp(12px,2vw,16px);
     color: #000;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    gap: 0;                   /* opcional: ajusta separación entre líneas */
+    gap: 0;
     text-align: center;
   }
 </style>
