@@ -5,7 +5,7 @@
 /* BODY Y FONDO */
 body {
   margin: 0;
-  background: linear-gradient(120deg, #000000, #ff0000, #c35500);
+  background: linear-gradient(120deg, #00000094, #ff00008c, #00c3319e);
   background-size: 400% 400%;
   animation: gradientAnimation 15s ease infinite;
   font-family: Arial, sans-serif;
