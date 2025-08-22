@@ -29,15 +29,16 @@
       height: 16px;
       background: linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(255,255,255,0));
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 20px;
-      pointer-events: none; /* no interfiere con clics */
+      justify-content: center; /* centrado horizontal */
+      align-items: center; /* alinea verticalmente las flechas */
+      gap: 4px; /* separación mínima entre flechas */
+      pointer-events: none;
     }
     .cylinder-indicator .arrow {
       font-size: 14px;
       color: #fff;
       text-shadow: 0 0 4px rgba(0,0,0,0.7);
+      display: inline-flex; /* asegura que ambas flechas estén a la misma altura */
     }
 
     .zone {
