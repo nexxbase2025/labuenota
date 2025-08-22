@@ -51,6 +51,24 @@
     gap: 0;
     text-align: center;
   }
+
+  /* BURBUJA DE REGRESAR */
+  #backButton {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: rgba(213, 0, 0, 0.755);
+    color: yellow;
+    font-weight: bold;
+    border: none;
+    border-radius: 50%;
+    padding: 14px 20px;
+    font-size: 24px;
+    cursor: pointer;
+    display: none;
+    z-index: 10000;
+    box-shadow: 0 4px 12px red; /* sombra roja */
+  }
 </style>
 </head>
 <body>
@@ -99,6 +117,9 @@
   📲 Para instalar esta app en iPhone, pulsa <strong>Compartir</strong> → <strong>Y luego Añadir a pantalla de inicio</strong>.
   <br /><button id="closeIosPromptBtn">Cerrar</button>
 </div>
+
+<!-- BOTÓN REGRESAR -->
+<button id="backButton">⟵</button>
 
 <script src="app.js"></script>
 <script>
@@ -149,12 +170,37 @@
   }
 
   // ========================================
-  // FIJAR LA PANTALLA PRINCIPAL VERTICAL
+  // FIX: BURBUJA DE REGRESAR EN ANDROID
   // ========================================
-  const isMainScreen = true; // aplica solo a esta página principal
+  const backButton = document.getElementById('backButton');
+  const isAndroid = /Android/i.test(navigator.userAgent);
 
-  if(isMainScreen && screen.orientation && screen.orientation.lock){
-    screen.orientation.lock('portrait').catch(()=>{ /* Si no se puede, se ignora */ });
+  function showBackButtonTemp() {
+    backButton.style.display = 'block';
+    clearTimeout(window.hideTimeout);
+    window.hideTimeout = setTimeout(() => { backButton.style.display='none'; }, 4000);
+  }
+
+  if(isAndroid){
+    // Mostrar al tocar cualquier lugar
+    document.addEventListener('click', showBackButtonTemp);
+
+    // Para fullscreen
+    function handleFullscreenChange() {
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        movie = document.getElementById('movie');
+        if(movie) movie.addEventListener('click', showBackButtonTemp);
+      } else {
+        backButton.style.display = 'none';
+        movie = document.getElementById('movie');
+        if(movie) movie.removeEventListener('click', showBackButtonTemp);
+      }
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    // Mostrar siempre encima de todo
+    backButton.style.zIndex = 100000;
   }
 </script>
 </body>
