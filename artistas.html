@@ -165,14 +165,14 @@
   window.addEventListener('mousemove', e => {
     if (!dragging) return;
     const dx = e.clientX - startX;
-    rotationY += dx * 0.3;
+    rotationY += dx * 0.5;
     cylinder.style.transform = `rotateY(${rotationY}deg)`;
     startX = e.clientX;
   });
   window.addEventListener('touchmove', e => {
     if (!dragging) return;
     const dx = e.touches[0].clientX - startX;
-    rotationY += dx * 0.3;
+    rotationY += dx * 0.5;
     cylinder.style.transform = `rotateY(${rotationY}deg)`;
     startX = e.touches[0].clientX;
   });
