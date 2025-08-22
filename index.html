@@ -130,26 +130,31 @@
   if(isIOS){
     window.addEventListener('pageshow', () => {
       setTimeout(() => {
-        // Forzar scroll top
         window.scrollTo(0,0);
-        // Reaplicar altura y layout
         document.body.style.height = window.innerHeight + 'px';
         document.body.style.width = window.innerWidth + 'px';
       }, 100);
     });
 
     window.addEventListener('orientationchange', () => {
-      // Al girar, reajustar layout
       document.body.style.height = window.innerHeight + 'px';
       document.body.style.width = window.innerWidth + 'px';
-      // Forzar repaint de elementos para que se acomoden
       const elems = document.querySelectorAll('#top-bar, .gallery-scroll, .radio-player, #peli-bubble, .social-row-abajo');
       elems.forEach(el => {
         el.style.display='none';
-        void el.offsetHeight; // Forzar reflow
+        void el.offsetHeight;
         el.style.display='';
       });
     });
+  }
+
+  // ========================================
+  // FIJAR LA PANTALLA PRINCIPAL VERTICAL
+  // ========================================
+  const isMainScreen = true; // aplica solo a esta página principal
+
+  if(isMainScreen && screen.orientation && screen.orientation.lock){
+    screen.orientation.lock('portrait').catch(()=>{ /* Si no se puede, se ignora */ });
   }
 </script>
 </body>
