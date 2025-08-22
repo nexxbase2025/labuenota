@@ -55,7 +55,6 @@
 <button id="activateSound">Activar sonido</button>
 
 <script>
-/* ==== TU SCRIPT ORIGINAL SIN CAMBIOS ==== */
 const movie = document.getElementById('movie');
 const backButton = document.getElementById('backButton');
 const activateSound = document.getElementById('activateSound');
@@ -92,6 +91,13 @@ window.addEventListener('resize', adjustVideoSize);
 window.addEventListener('orientationchange', adjustVideoSize);
 adjustVideoSize();
 
+// ===== PERMITIR ROTACIÓN NATURAL EN ANDROID =====
+if (isAndroid && screen.orientation) {
+  window.addEventListener("orientationchange", () => {
+    adjustVideoSize();
+  });
+}
+
 // Temporizador para anuncios
 movie.addEventListener('timeupdate', () => {
   if(!adPlaying && movie.currentTime >= nextAdTime){
@@ -100,7 +106,7 @@ movie.addEventListener('timeupdate', () => {
   }
 });
 
-// Función para reproducir anuncios
+// Función para reproducir anuncios (puede ser 1 o más)
 async function playAdsSequence(){
   adPlaying = true;
   movieTimeBeforeAd = movie.currentTime;
@@ -109,7 +115,7 @@ async function playAdsSequence(){
   const originalSrc = movie.querySelector('source').src;
   const originalType = movie.querySelector('source').type;
 
-  const adsToPlay = 2; // cuántos anuncios se reproducen
+  const adsToPlay = 2; // cuántos anuncios se reproducen en cada tanda
 
   for(let i=0; i<adsToPlay; i++){
     const adSrc = ads[currentAdIndex];
@@ -145,6 +151,7 @@ async function playAdsSequence(){
     });
   }
 
+  // Volver a la película
   movie.src = originalSrc;
   movie.querySelector('source').type = originalType;
   movie.load();
