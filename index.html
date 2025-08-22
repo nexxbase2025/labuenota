@@ -121,6 +121,36 @@
       alert("Comparte el enlace: " + url);
     }
   }
+
+  // ========================================
+  // FIX: Reacomodar layout en iPhone al regresar de la peli
+  // ========================================
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if(isIOS){
+    window.addEventListener('pageshow', () => {
+      setTimeout(() => {
+        // Forzar scroll top
+        window.scrollTo(0,0);
+        // Reaplicar altura y layout
+        document.body.style.height = window.innerHeight + 'px';
+        document.body.style.width = window.innerWidth + 'px';
+      }, 100);
+    });
+
+    window.addEventListener('orientationchange', () => {
+      // Al girar, reajustar layout
+      document.body.style.height = window.innerHeight + 'px';
+      document.body.style.width = window.innerWidth + 'px';
+      // Forzar repaint de elementos para que se acomoden
+      const elems = document.querySelectorAll('#top-bar, .gallery-scroll, .radio-player, #peli-bubble, .social-row-abajo');
+      elems.forEach(el => {
+        el.style.display='none';
+        void el.offsetHeight; // Forzar reflow
+        el.style.display='';
+      });
+    });
+  }
 </script>
 </body>
 </html>
