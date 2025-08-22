@@ -23,9 +23,11 @@
     position: fixed;
     top: 20px; left: 20px;
     background: rgba(0,0,0,0.6);
-    color: #fff;
+    color: yellow; /* más visible */
+    font-weight: bold;
     border: none; border-radius: 50%;
-    padding: 10px 15px; font-size: 18px;
+    padding: 12px 18px;
+    font-size: 22px; /* más grande */
     cursor: pointer;
     display: none; z-index: 10000;
   }
@@ -76,6 +78,7 @@ const isAndroid = /Android/i.test(navigator.userAgent);
 let movieTimeBeforeAd = 0;
 let soundActivated = localStorage.getItem("soundActivated") === "true";
 
+// Mostrar botón regresar al tocar pantalla
 document.addEventListener('click', () => {
   backButton.style.display = 'block';
   clearTimeout(hideTimeout);
@@ -83,6 +86,7 @@ document.addEventListener('click', () => {
 });
 backButton.addEventListener('click', ()=>{ window.location.href='index.html'; });
 
+// Ajustar tamaño del video
 function adjustVideoSize(){
   movie.style.width = window.innerWidth + "px";
   movie.style.height = window.innerHeight + "px";
@@ -98,6 +102,28 @@ if (isAndroid && screen.orientation) {
   });
 }
 
+// ======== FIX: Mostrar botón en fullscreen Android =========
+function setupFullscreenEvents() {
+  function handleFullscreenChange() {
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      movie.addEventListener('click', showBackButtonTemp);
+    } else {
+      backButton.style.display = 'none';
+      movie.removeEventListener('click', showBackButtonTemp);
+    }
+  }
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+}
+
+function showBackButtonTemp() {
+  backButton.style.display = 'block';
+  clearTimeout(hideTimeout);
+  hideTimeout = setTimeout(()=>{ backButton.style.display='none'; }, 4000);
+}
+setupFullscreenEvents();
+// ============================================================
+
 // Temporizador para anuncios
 movie.addEventListener('timeupdate', () => {
   if(!adPlaying && movie.currentTime >= nextAdTime){
@@ -106,7 +132,7 @@ movie.addEventListener('timeupdate', () => {
   }
 });
 
-// Función para reproducir anuncios (puede ser 1 o más)
+// Función para reproducir anuncios
 async function playAdsSequence(){
   adPlaying = true;
   movieTimeBeforeAd = movie.currentTime;
@@ -115,7 +141,7 @@ async function playAdsSequence(){
   const originalSrc = movie.querySelector('source').src;
   const originalType = movie.querySelector('source').type;
 
-  const adsToPlay = 2; // cuántos anuncios se reproducen en cada tanda
+  const adsToPlay = 2;
 
   for(let i=0; i<adsToPlay; i++){
     const adSrc = ads[currentAdIndex];
@@ -151,7 +177,6 @@ async function playAdsSequence(){
     });
   }
 
-  // Volver a la película
   movie.src = originalSrc;
   movie.querySelector('source').type = originalType;
   movie.load();
