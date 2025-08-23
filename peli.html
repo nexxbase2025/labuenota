@@ -12,25 +12,27 @@
     object-fit:contain;
     background:black;
   }
-  /* Quitar botón de descarga */
-  video::-internal-media-controls-download-button {
-    display: none;
-  }
+
+  /* Quitar botón de descarga en todos los navegadores */
   video::-webkit-media-controls-enclosure {
     overflow: hidden;
   }
+  video::-webkit-media-controls-download-button {
+    display: none;
+  }
+  video::-internal-media-controls-download-button {
+    display: none;
+  }
+
   #backButton {
     position: fixed;
     top: 20px; left: 20px;
-    background: rgba(213, 0, 0, 0.755);
-    color: yellow; /* flecha amarilla */
-    font-weight: bold;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
     border: none; border-radius: 50%;
-    padding: 3px 12px;
-    font-size: 40px; /* más grande */
+    padding: 10px 15px; font-size: 18px;
     cursor: pointer;
     display: none; z-index: 10000;
-    box-shadow: 0 4px 10px rgba(255, 0, 0, 0.85); /* sombra roja */
   }
   #activateSound {
     position: fixed;
@@ -48,7 +50,7 @@
 <body>
 
 <video id="movie" controls playsinline webkit-playsinline
-       controlslist="nodownload noremoteplayback noplaybackrate" 
+       controlsList="nodownload noremoteplayback noplaybackrate" 
        disablePictureInPicture>
   <source src="https://ia801801.us.archive.org/27/items/pets-united-2020-latino-1080-streaming-latino/bad%20boy%203.ia.mp4" type="video/mp4">
   Tu navegador no soporta el video.
@@ -62,28 +64,30 @@ const movie = document.getElementById('movie');
 const backButton = document.getElementById('backButton');
 const activateSound = document.getElementById('activateSound');
 
-const isAndroid = /Android/i.test(navigator.userAgent);
+// ==== CONFIGURACIÓN ====
+const adInterval = 15*60; // minutos * 60 = segundos
+const ads = [
+  "PAQUETERIA  GLOBAL EXPRESS.mp4",
+  "PROMO NEGOCIOS.mp4"
+];
+let currentAdIndex = 0;
+// ======================
+
+let nextAdTime = adInterval;
+let adPlaying = false;
 let hideTimeout;
+
+const isAndroid = /Android/i.test(navigator.userAgent);
+let movieTimeBeforeAd = 0;
 let soundActivated = localStorage.getItem("soundActivated") === "true";
 
-// ==== BACK BUTTON SOLO SOBRE EL VIDEO ====
-
-// Mostrar botón solo al tocar el video, no todo el documento
-function showBackButtonTemp() {
+document.addEventListener('click', () => {
   backButton.style.display = 'block';
   clearTimeout(hideTimeout);
   hideTimeout = setTimeout(()=>{ backButton.style.display='none'; }, 4000);
-}
-
-// En Android, escucha clicks sobre el video
-if(isAndroid){
-  movie.addEventListener('click', showBackButtonTemp);
-}
-
-// Función de volver
+});
 backButton.addEventListener('click', ()=>{ window.location.href='index.html'; });
 
-// Ajustar tamaño del video
 function adjustVideoSize(){
   movie.style.width = window.innerWidth + "px";
   movie.style.height = window.innerHeight + "px";
@@ -92,34 +96,93 @@ window.addEventListener('resize', adjustVideoSize);
 window.addEventListener('orientationchange', adjustVideoSize);
 adjustVideoSize();
 
-// Permitir rotación natural en Android
-if (isAndroid && screen.orientation) {
-  window.addEventListener("orientationchange", () => {
-    adjustVideoSize();
-  });
-}
-
-// Mantener botón solo en fullscreen Android
-function setupFullscreenEvents() {
-  function handleFullscreenChange() {
-    if (document.fullscreenElement || document.webkitFullscreenElement) {
-      movie.addEventListener('click', showBackButtonTemp);
-    } else {
-      backButton.style.display = 'none';
-      movie.removeEventListener('click', showBackButtonTemp);
-    }
+// Temporizador para anuncios
+movie.addEventListener('timeupdate', () => {
+  if(!adPlaying && movie.currentTime >= nextAdTime){
+    nextAdTime += adInterval;
+    playAdsSequence();
   }
-  document.addEventListener('fullscreenchange', handleFullscreenChange);
-  document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-}
-setupFullscreenEvents();
+});
 
-// ===== El resto del código de anuncios y sonido queda igual =====
+// Función para reproducir anuncios (puede ser 1 o más)
+async function playAdsSequence(){
+  adPlaying = true;
+  movieTimeBeforeAd = movie.currentTime;
+  movie.pause();
+
+  const originalSrc = movie.querySelector('source').src;
+  const originalType = movie.querySelector('source').type;
+
+  // Determinar cuántos anuncios se van a reproducir en esta tanda
+  const adsToPlay = 2;
+
+  for(let i=0; i<adsToPlay; i++){
+    const adSrc = ads[currentAdIndex];
+    currentAdIndex = (currentAdIndex + 1) % ads.length;
+    movie.src = adSrc;
+    movie.querySelector('source').type = "video/mp4";
+    movie.load();
+
+    if(isAndroid){
+      if(soundActivated){
+        movie.muted = false;
+        await movie.play().catch(()=>{});
+      } else {
+        movie.muted = true;
+        try{ await movie.play(); } catch(e){}
+        activateSound.style.display = 'block';
+      }
+    } else {
+      movie.muted = false;
+      await movie.play().catch(()=>{});
+    }
+
+    activateSound.onclick = () => {
+      movie.muted = false;
+      movie.play().catch(()=>{});
+      activateSound.style.display = 'none';
+      soundActivated = true;
+      localStorage.setItem("soundActivated","true");
+    };
+
+    await new Promise(resolve => {
+      movie.onended = resolve;
+    });
+  }
+
+  // Volver a la película
+  movie.src = originalSrc;
+  movie.querySelector('source').type = originalType;
+  movie.load();
+  movie.currentTime = movieTimeBeforeAd;
+  movie.muted = false;
+  movie.playbackRate = 1.0;
+  movie.play().catch(()=>{});
+  adPlaying = false;
+  activateSound.style.display = 'none';
+}
+
+document.addEventListener('touchstart', ()=>{
+  movie.load();
+  if(isAndroid && !soundActivated){
+    movie.muted = false;
+    soundActivated = true;
+    localStorage.setItem("soundActivated","true");
+  }
+}, {once:true});
+
+movie.addEventListener('seeking', ()=>{
+  if(adPlaying) return;
+  movie.playbackRate = 2.0;
+});
+movie.addEventListener('seeked', ()=>{
+  movie.playbackRate = 1.0;
+});
+
 </script>
 
 </body>
 </html>
-
 
 
 
