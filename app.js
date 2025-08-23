@@ -1,166 +1,86 @@
 
-// =======================
-// ELEMENTOS PRINCIPALES
-// =======================
-const audio = document.getElementById('audio');
-const playPauseBtn = document.getElementById('playPauseBtn');
-const spectrum = document.getElementById('spectrum');
-const installBubble = document.getElementById('install-bubble');
-const iosInstallPrompt = document.getElementById('ios-install-prompt');
-const closeIosPromptBtn = document.getElementById('closeIosPromptBtn');
-const peliBubble = document.getElementById('peli-bubble');
-
-let isPlaying = false;
-let animationId;
+// ==================== PWA INSTALL PROMPT ==================== //
 let deferredPrompt;
-let peliWindow = null;
+const installBtn = document.getElementById("installBtn");
 
-// =======================
-// MEDIA SESSION (pantalla de bloqueo)
-// =======================
-if ('mediaSession' in navigator) {
-  navigator.mediaSession.metadata = new MediaMetadata({
-    title: 'LA BUENOTA RADIO ONLINE',
-    artist: 'Ivibra',
-    album: 'Radio Online',
-    artwork: [
-      { src: 'ivibra.webp', sizes: '96x96', type: 'image/webp' },
-      { src: 'ivibra.webp', sizes: '128x128', type: 'image/webp' },
-      { src: 'ivibra.webp', sizes: '192x192', type: 'image/webp' },
-      { src: 'ivibra.webp', sizes: '256x256', type: 'image/webp' },
-      { src: 'ivibra.webp', sizes: '384x384', type: 'image/webp' },
-      { src: 'ivibra.webp', sizes: '512x512', type: 'image/webp' }
-    ]
-  });
-
-  navigator.mediaSession.setActionHandler('play', () => {
-    playRadio();
-  });
-  navigator.mediaSession.setActionHandler('pause', () => {
-    pauseRadio();
-  });
-}
-
-// =======================
-// SPECTRUM DE BARRAS
-// =======================
-const bars = [];
-for (let i = 0; i < 16; i++) {
-  const bar = document.createElement('div');
-  bar.className = 'bar';
-  spectrum.appendChild(bar);
-  bars.push(bar);
-}
-function animateSpectrum() {
-  bars.forEach(bar => bar.style.height = `${Math.random() * 100}%`);
-  const logo = document.getElementById('logo');
-  if (logo) logo.style.transform = `translateX(-50%) scale(${1 + Math.random() * 0.1})`;
-  animationId = requestAnimationFrame(animateSpectrum);
-}
-
-// =======================
-// REPRODUCCIÓN RADIO
-// =======================
-function playRadio() {
-  audio.manualPaused = false;
-
-  // AudioContext para Android/iOS
-  if (!window.audioCtx) {
-    window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const track = window.audioCtx.createMediaElementSource(audio);
-    track.connect(window.audioCtx.destination);
-  }
-  if (window.audioCtx.state === 'suspended') window.audioCtx.resume();
-
-  audio.play().then(() => {
-    playPauseBtn.textContent = '⏸';
-    isPlaying = true;
-    animateSpectrum();
-  }).catch(err => console.error('Error al reproducir:', err));
-}
-
-function pauseRadio() {
-  audio.manualPaused = true;
-  audio.pause();
-  playPauseBtn.textContent = '▶';
-  isPlaying = false;
-  cancelAnimationFrame(animationId);
-}
-
-// =======================
-// BOTÓN PLAY / PAUSE
-// =======================
-playPauseBtn.addEventListener('click', () => {
-  if (!isPlaying) playRadio();
-  else pauseRadio();
-});
-
-// =======================
-// DESBLOQUEO AUDIO AL TOQUE
-// =======================
-document.addEventListener('touchstart', () => {
-  if (audio.paused && !isPlaying) audio.play().then(() => audio.pause()).catch(() => {});
-}, { once: true });
-
-// =======================
-// REINTENTAR SI SE DETIENE
-// =======================
-audio.addEventListener('pause', () => {
-  if (isPlaying && !audio.manualPaused) setTimeout(playRadio, 500);
-});
-
-// =======================
-// VISIBILITY CHANGE
-// =======================
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && isPlaying) {
-    animateSpectrum();
-    if (audio.paused) playRadio();
-  }
-});
-
-// =======================
-// INSTALACIÓN ANDROID
-// =======================
-window.addEventListener('beforeinstallprompt', (e) => {
+window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  installBubble.style.display = 'block';
+  if (installBtn) installBtn.style.display = "block"; // mostrar solo en desktop
 });
 
-installBubble.addEventListener('click', async () => {
-  installBubble.style.display = 'none';
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
+if (installBtn) {
+  installBtn.addEventListener("click", () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        deferredPrompt = null;
+        installBtn.style.display = "none";
+      });
+    }
+  });
+}
+
+// Detectar iPhone/iPad y mostrar burbuja especial
+window.addEventListener("load", () => {
+  const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+  const isInStandaloneMode = ("standalone" in window.navigator) && window.navigator.standalone;
+  if (isIos && !isInStandaloneMode) {
+    const iosPrompt = document.createElement("div");
+    iosPrompt.innerHTML = `
+      <div style="position:fixed; bottom:10px; left:10px; right:10px; 
+                  background:#000; color:#fff; padding:15px; border-radius:12px;
+                  font-size:14px; z-index:10000; text-align:center;">
+        📲 Para instalar esta app en tu iPhone: toca 
+        <strong>Compartir</strong> ➜ <strong>Añadir a pantalla de inicio</strong>.
+        <br><button id="closeIosPrompt" style="margin-top:10px; padding:5px 12px; border:none; border-radius:8px; background:#fff; color:#000; cursor:pointer;">Cerrar</button>
+      </div>
+    `;
+    document.body.appendChild(iosPrompt);
+    document.getElementById("closeIosPrompt").addEventListener("click", () => {
+      iosPrompt.remove();
+    });
   }
 });
 
-// =======================
-// INSTALACIÓN IOS
-// =======================
-function isIos() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
-function isInStandaloneMode() { return ('standalone' in window.navigator) && window.navigator.standalone; }
-document.addEventListener('DOMContentLoaded', () => {
-  if (isIos() && !isInStandaloneMode() && !localStorage.getItem('iosPromptShown')) {
-    iosInstallPrompt.style.display = 'block';
-  }
-});
-closeIosPromptBtn.addEventListener('click', () => {
-  iosInstallPrompt.style.display = 'none';
-  localStorage.setItem('iosPromptShown', 'true');
-});
+// ==================== PADS LOGIC ==================== //
+const padContainer = document.getElementById("padContainer");
+const menuButtons = document.querySelectorAll(".menu-btn");
 
-// =======================
-// PELI
-// =======================
-peliBubble.addEventListener('click', () => {
-  if (isPlaying) pauseRadio();
+// Definir categorías de efectos
+const efectos = {
+  "efectos1": ["efecto1.mp3", "efecto2.mp3", "efecto3.mp3"],
+  "efectos2": ["efecto4.mp3", "efecto5.mp3", "efecto6.mp3"],
+  "efectos3": ["efecto7.mp3", "efecto8.mp3", "efecto9.mp3"],
+  "efectos4": ["efecto10.mp3", "efecto11.mp3", "efecto12.mp3"],
+  "efectos5": ["efecto13.mp3", "efecto14.mp3", "efecto15.mp3"]
+};
 
-  peliWindow = window.open('peli.html', '_blank', 'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes');
+// Colores alternativos para distinguir cada set
+const colores = ["#ffcc00", "#00ccff", "#cc00ff", "#ff6600", "#66ff66"];
 
-  window.addEventListener('message', (e) => {
-    if (e.data === 'resumeRadio') playRadio();
+// Función para cargar los pads según categoría
+function cargarPads(categoria, index) {
+  padContainer.innerHTML = "";
+  const lista = efectos[categoria] || [];
+
+  lista.forEach((audio, i) => {
+    const pad = document.createElement("div");
+    pad.className = "pad";
+    pad.style.background = colores[index % colores.length];
+    pad.innerText = `PAD ${i + 1}`;
+    pad.addEventListener("click", () => {
+      const sonido = new Audio(`audios/${audio}`);
+      sonido.play();
+    });
+    padContainer.appendChild(pad);
+  });
+}
+
+// Event listeners para botones del menú
+menuButtons.forEach((btn, index) => {
+  btn.addEventListener("click", () => {
+    const categoria = btn.dataset.cat;
+    cargarPads(categoria, index);
   });
 });

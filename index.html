@@ -2,210 +2,213 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<link rel="apple-touch-icon" href="icono.webp" />
-<title>LA BUENOTA RADIO ONLINE</title>
-<link rel="manifest" href="manifest.json" />
-<link rel="stylesheet" href="style.css" />
-
-<!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-BQPYB6V4WZ"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-BQPYB6V4WZ');
-</script>
-
-<style>
-  #top-bar {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    width: 100%;
-    background: #111;
-    padding: 10px 0;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    z-index: 50;
-    position: fixed; 
-    top: calc(40px + 150px + 70px); 
-    left: 0;
-  }
-  #top-bar button {
-    background: var(--accent,#ffcc00);
-    border: none;
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: clamp(12px,2vw,16px);
-    color: #000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    gap: 0;
-    text-align: center;
-  }
-
-  /* BURBUJA DE REGRESAR */
-  #backButton {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    background: rgba(213, 0, 0, 0.755);
-    color: yellow;
-    font-weight: bold;
-    border: none;
-    border-radius: 50%;
-    padding: 14px 20px;
-    font-size: 24px;
-    cursor: pointer;
-    display: none;
-    z-index: 10000;
-    box-shadow: 0 4px 12px red; /* sombra roja */
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>DON BELTRÁN PADS</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: #000;
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+      z-index: 1000;
+      font-weight: bold;
+    }
+    .sidebar {
+      width: 150px;
+      background: #222;
+      padding: 20px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+    .sidebar button {
+      background: #333;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .sidebar button:hover {
+      background: #444;
+    }
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 10px;
+      padding: 80px 20px 20px 20px;
+      box-sizing: border-box;
+    }
+    .pad {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 0.1s;
+    }
+    .pad:active {
+      transform: scale(0.95);
+    }
+    /* Colores de pads */
+    .pad1 { background: #e74c3c; }
+    .pad2 { background: #3498db; }
+    .pad3 { background: #2ecc71; }
+    .pad4 { background: #9b59b6; }
+    .pad5 { background: #f1c40f; color: #000; }
+    .pad6 { background: #e67e22; }
+    .pad7 { background: #1abc9c; }
+    .pad8 { background: #34495e; }
+    .pad9 { background: #ff6b81; }
+    .pad10 { background: #8e44ad; }
+    .pad11 { background: #00cec9; }
+    .pad12 { background: #fd79a8; }
+    .pad13 { background: #636e72; }
+    .pad14 { background: #6c5ce7; }
+    .pad15 { background: #55efc4; color: #000; }
+    .pad16 { background: #fab1a0; color: #000; }
+    .pad17 { background: #dfe6e9; color: #000; }
+    .pad18 { background: #2d3436; }
+    /* Burbuja */
+    #installPrompt {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #000;
+      color: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 2000;
+      max-width: 280px;
+    }
+    #installPrompt button {
+      background: #ffcc00;
+      color: #000;
+      border: none;
+      padding: 5px 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #installPrompt .close {
+      background: transparent;
+      color: #fff;
+      border: none;
+      font-size: 16px;
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
+  <header>🎹 DON BELTRÁN PADS</header>
 
-<img src="ivibra.webp" id="logo" alt="Logo Ivibra" />
+  <div class="sidebar">
+    <button>Efecto 1</button>
+    <button>Efecto 2</button>
+    <button>Efecto 3</button>
+    <button>Efecto 4</button>
+    <button>Efecto 5</button>
+  </div>
 
-<div id="top-bar">
-  <button class="bubble" onclick="abrirPagina('artistas.html')">
-    <span style="display:block;">Nuestros</span>
-    <span style="display:block;">Artistas</span>
-  </button>
-  <button class="bubble" onclick="abrirPagina('clientes.html')">
-    <span style="display:block;">Nuestros</span>
-    <span style="display:block;">Clientes</span>
-  </button>
-  <button class="bubble" onclick="compartirApp()">
-    <span style="display:block;">Compartir</span>
-    <span style="display:block;">App</span>
-  </button>
-</div>
+  <div class="main">
+    <div class="pad pad1">PAD 1</div>
+    <div class="pad pad2">PAD 2</div>
+    <div class="pad pad3">PAD 3</div>
+    <div class="pad pad4">PAD 4</div>
+    <div class="pad pad5">PAD 5</div>
+    <div class="pad pad6">PAD 6</div>
+    <div class="pad pad7">PAD 7</div>
+    <div class="pad pad8">PAD 8</div>
+    <div class="pad pad9">PAD 9</div>
+    <div class="pad pad10">PAD 10</div>
+    <div class="pad pad11">PAD 11</div>
+    <div class="pad pad12">PAD 12</div>
+    <div class="pad pad13">PAD 13</div>
+    <div class="pad pad14">PAD 14</div>
+    <div class="pad pad15">PAD 15</div>
+    <div class="pad pad16">PAD 16</div>
+    <div class="pad pad17">PAD 17</div>
+    <div class="pad pad18">PAD 18</div>
+  </div>
 
-<div id="peli-bubble">🎬 MIRA LA PELI DE LA SEMANA</div>
+  <!-- Burbuja de instalación -->
+  <div id="installPrompt">
+    <button class="close">✖</button>
+    <div id="installMessage"></div>
+    <button id="installBtn">Instalar</button>
+  </div>
 
-<nav class="social-row-abajo" aria-label="Redes sociales">
-  <a href="https://wa.me/593984827009" target="_blank" rel="noopener"><img src="what.webp" alt="WhatsApp" /></a>
-  <a href="https://www.facebook.com/labuenotaradioonline" target="_blank" rel="noopener"><img src="face.webp" alt="Facebook" /></a>
-  <a href="https://www.instagram.com/guillermo_villagran_delgado/reel/DGLaDCZJuHX/" target="_blank" rel="noopener"><img src="ins.webp" alt="Instagram" /></a>
-  <a href="https://www.tiktok.com/@radiomaxsoloexitos" target="_blank" rel="noopener"><img src="tik.webp" alt="TikTok" /></a>
-</nav>
+  <script>
+    let deferredPrompt;
+    const promptEl = document.getElementById("installPrompt");
+    const msgEl = document.getElementById("installMessage");
+    const btnEl = document.getElementById("installBtn");
 
-<div class="gallery-scroll">
-  <div class="gallery-item"><img src="r1.webp" alt="Promo 1" /></div>
-  <div class="gallery-item"><img src="r2.webp" alt="Promo 2" /></div>
-  <div class="gallery-item"><img src="r3.webp" alt="Promo 3" /></div>
-</div>
-
-<div class="radio-player">
-  <button class="play-btn" id="playPauseBtn">▶</button>
-  <div class="spectrum" id="spectrum"></div>
-</div>
-
-<audio id="audio" preload="auto" src="https://stream.zeno.fm/jpsr5zsxjlguv" crossorigin="anonymous"></audio>
-
-<div id="install-bubble">📲 Instalar app</div>
-<div id="ios-install-prompt">
-  📲 Para instalar esta app en iPhone, pulsa <strong>Compartir</strong> → <strong>Y luego Añadir a pantalla de inicio</strong>.
-  <br /><button id="closeIosPromptBtn">Cerrar</button>
-</div>
-
-<!-- BOTÓN REGRESAR -->
-<button id="backButton">⟵</button>
-
-<script src="app.js"></script>
-<script>
-  // ========================================
-  // NAVEGACIÓN SEGURA PARA ARTISTAS Y CLIENTES
-  // ========================================
-  function abrirPagina(pagina){
-    window.open(pagina, '_self');
-  }
-
-  // ========================================
-  // BOTÓN COMPARTIR
-  // ========================================
-  function compartirApp(){
-    const url = "https://labuenota.vercel.app/";
-    const text = "¡Descarga la app de La Buenota Radio Online, se puede ver peliculas Gratis y tiene buena musica!";
-    if(navigator.share){
-      navigator.share({title:"La Buenota Radio Online", text, url}).catch(console.error);
-    } else {
-      alert("Comparte el enlace: " + url);
+    function isIOS() {
+      return /iphone|ipad|ipod/i.test(navigator.userAgent);
     }
-  }
 
-  // ========================================
-  // FIX: Reacomodar layout en iPhone al regresar de la peli
-  // ========================================
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    function showPrompt(message, withInstallButton = true) {
+      msgEl.innerHTML = message;
+      btnEl.style.display = withInstallButton ? "inline-block" : "none";
+      promptEl.style.display = "block";
+    }
 
-  if(isIOS){
-    window.addEventListener('pageshow', () => {
-      setTimeout(() => {
-        window.scrollTo(0,0);
-        document.body.style.height = window.innerHeight + 'px';
-        document.body.style.width = window.innerWidth + 'px';
-      }, 100);
+    // Evento para Android/PC/Mac (Chrome, Edge, etc.)
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      showPrompt("Instala esta app en tu dispositivo para acceder más rápido.");
     });
 
-    window.addEventListener('orientationchange', () => {
-      document.body.style.height = window.innerHeight + 'px';
-      document.body.style.width = window.innerWidth + 'px';
-      const elems = document.querySelectorAll('#top-bar, .gallery-scroll, .radio-player, #peli-bubble, .social-row-abajo');
-      elems.forEach(el => {
-        el.style.display='none';
-        void el.offsetHeight;
-        el.style.display='';
-      });
-    });
-  }
+    // Detectar iOS Safari
+    if (isIOS() && !navigator.standalone) {
+      showPrompt("Para instalar esta app, toca <strong>Compartir</strong> y luego <strong>Añadir a pantalla de inicio</strong>.", false);
+    }
 
-  // ========================================
-  // FIX: BURBUJA DE REGRESAR EN ANDROID
-  // ========================================
-  const backButton = document.getElementById('backButton');
-  const isAndroid = /Android/i.test(navigator.userAgent);
-
-  function showBackButtonTemp() {
-    backButton.style.display = 'block';
-    clearTimeout(window.hideTimeout);
-    window.hideTimeout = setTimeout(() => { backButton.style.display='none'; }, 4000);
-  }
-
-  if(isAndroid){
-    // QUITADO: ya no aparece al tocar cualquier parte de la pantalla
-    // document.addEventListener('click', showBackButtonTemp);
-
-    // Para fullscreen
-    function handleFullscreenChange() {
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
-        movie = document.getElementById('movie');
-        if(movie) movie.addEventListener('click', showBackButtonTemp);
-      } else {
-        backButton.style.display = 'none';
-        movie = document.getElementById('movie');
-        if(movie) movie.removeEventListener('click', showBackButtonTemp);
+    // Botón instalar
+    btnEl.addEventListener("click", async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === "accepted") {
+          promptEl.style.display = "none";
+        }
       }
-    }
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    });
 
-    // Mostrar siempre encima de todo
-    backButton.style.zIndex = 100000;
-  }
-</script>
+    // Botón cerrar
+    document.querySelector("#installPrompt .close").addEventListener("click", () => {
+      promptEl.style.display = "none";
+    });
+  </script>
 </body>
 </html>
-
-
-
-
