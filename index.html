@@ -51,24 +51,6 @@
     gap: 0;
     text-align: center;
   }
-
-  /* BURBUJA DE REGRESAR */
-  #backButton {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    background: rgba(213, 0, 0, 0.755);
-    color: yellow;
-    font-weight: bold;
-    border: none;
-    border-radius: 50%;
-    padding: 14px 20px;
-    font-size: 24px;
-    cursor: pointer;
-    display: none;
-    z-index: 10000;
-    box-shadow: 0 4px 12px red; /* sombra roja */
-  }
 </style>
 </head>
 <body>
@@ -95,8 +77,8 @@
 <nav class="social-row-abajo" aria-label="Redes sociales">
   <a href="https://wa.me/593984827009" target="_blank" rel="noopener"><img src="what.webp" alt="WhatsApp" /></a>
   <a href="https://www.facebook.com/labuenotaradioonline" target="_blank" rel="noopener"><img src="face.webp" alt="Facebook" /></a>
-  <a href="https://www.instagram.com/guillermo_villagran_delgado/reel/DGLaDCZJuHX/" target="_blank" rel="noopener"><img src="ins.webp" alt="Instagram" /></a>
-  <a href="https://www.tiktok.com/@radiomaxsoloexitos" target="_blank" rel="noopener"><img src="tik.webp" alt="TikTok" /></a>
+  <a href="https://www.instagram.com/labuenotaradioonline/" target="_blank" rel="noopener"><img src="ins.webp" alt="Instagram" /></a>
+  <a href="https://www.tiktok.com/@labuenotaradioonline?lang=es" target="_blank" rel="noopener"><img src="tik.webp" alt="TikTok" /></a>
 </nav>
 
 <div class="gallery-scroll">
@@ -118,9 +100,6 @@
   <br /><button id="closeIosPromptBtn">Cerrar</button>
 </div>
 
-<!-- BOTÓN REGRESAR -->
-<button id="backButton">⟵</button>
-
 <script src="app.js"></script>
 <script>
   // ========================================
@@ -141,66 +120,6 @@
     } else {
       alert("Comparte el enlace: " + url);
     }
-  }
-
-  // ========================================
-  // FIX: Reacomodar layout en iPhone al regresar de la peli
-  // ========================================
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-  if(isIOS){
-    window.addEventListener('pageshow', () => {
-      setTimeout(() => {
-        window.scrollTo(0,0);
-        document.body.style.height = window.innerHeight + 'px';
-        document.body.style.width = window.innerWidth + 'px';
-      }, 100);
-    });
-
-    window.addEventListener('orientationchange', () => {
-      document.body.style.height = window.innerHeight + 'px';
-      document.body.style.width = window.innerWidth + 'px';
-      const elems = document.querySelectorAll('#top-bar, .gallery-scroll, .radio-player, #peli-bubble, .social-row-abajo');
-      elems.forEach(el => {
-        el.style.display='none';
-        void el.offsetHeight;
-        el.style.display='';
-      });
-    });
-  }
-
-  // ========================================
-  // FIX: BURBUJA DE REGRESAR EN ANDROID
-  // ========================================
-  const backButton = document.getElementById('backButton');
-  const isAndroid = /Android/i.test(navigator.userAgent);
-
-  function showBackButtonTemp() {
-    backButton.style.display = 'block';
-    clearTimeout(window.hideTimeout);
-    window.hideTimeout = setTimeout(() => { backButton.style.display='none'; }, 4000);
-  }
-
-  if(isAndroid){
-    // QUITADO: ya no aparece al tocar cualquier parte de la pantalla
-    // document.addEventListener('click', showBackButtonTemp);
-
-    // Para fullscreen
-    function handleFullscreenChange() {
-      if (document.fullscreenElement || document.webkitFullscreenElement) {
-        movie = document.getElementById('movie');
-        if(movie) movie.addEventListener('click', showBackButtonTemp);
-      } else {
-        backButton.style.display = 'none';
-        movie = document.getElementById('movie');
-        if(movie) movie.removeEventListener('click', showBackButtonTemp);
-      }
-    }
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-
-    // Mostrar siempre encima de todo
-    backButton.style.zIndex = 100000;
   }
 </script>
 </body>
