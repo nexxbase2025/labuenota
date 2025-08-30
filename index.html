@@ -122,7 +122,7 @@
   <br /><button id="closeIosPromptBtn">Cerrar</button>
 </div>
 
-<!-- Contenedor iframe para Android -->
+<!-- Contenedor iframe para subpáginas -->
 <div id="iframe-container">
   <iframe id="subpage-frame"></iframe>
   <button id="close-frame-btn">⬅ Volver</button>
@@ -130,25 +130,6 @@
 
 <script src="app.js"></script>
 <script>
-function abrirPagina(pagina){
-  const isAndroid = /android/i.test(navigator.userAgent);
-  const iframeContainer = document.getElementById('iframe-container');
-  const iframe = document.getElementById('subpage-frame');
-  const closeBtn = document.getElementById('close-frame-btn');
-
-  if(isAndroid){
-    iframe.src = pagina;
-    iframeContainer.style.display = 'block';
-    closeBtn.onclick = () => {
-      iframeContainer.style.display = 'none';
-      iframe.src = '';
-    };
-  } else {
-    // iPhone y otros navegadores
-    window.location.href = pagina;
-  }
-}
-
 function compartirApp(){
   const url = "https://labuenota.vercel.app/";
   const text = "¡Descarga la app de La Buenota Radio Online, se puede ver peliculas Gratis y tiene buena musica!";

@@ -13,7 +13,6 @@ const peliBubble = document.getElementById('peli-bubble');
 let isPlaying = false;
 let animationId;
 let deferredPrompt;
-let peliWindow = null;
 
 // =======================
 // MEDIA SESSION (pantalla de bloqueo)
@@ -55,15 +54,11 @@ function animateSpectrum() {
 }
 
 // =======================
-// REPRODUCCIÓN RADIO AJUSTADA PARA ANDROID/iOS
+// REPRODUCCIÓN RADIO
 // =======================
 function playRadio() {
   audio.manualPaused = false;
-
-  // Forzar carga del stream si se reinicia
   audio.load();
-
-  // AudioContext para Android/iOS
   if (!window.audioCtx) {
     window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const track = window.audioCtx.createMediaElementSource(audio);
@@ -71,7 +66,6 @@ function playRadio() {
   }
   if (window.audioCtx.state === 'suspended') window.audioCtx.resume();
 
-  // Intentar reproducir el audio, con reintentos si falla
   audio.play().then(() => {
     playPauseBtn.textContent = '⏸';
     isPlaying = true;
@@ -111,17 +105,9 @@ document.addEventListener('touchstart', () => {
 audio.addEventListener('pause', () => {
   if (isPlaying && !audio.manualPaused) setTimeout(playRadio, 500);
 });
-
-// =======================
-// RECONEXIÓN AUTOMÁTICA Y DETECCIÓN DE PAUSA INDEBIDA
-// =======================
 function restartStream() {
-  if (isPlaying && !audio.manualPaused) {
-    console.log("♻️ Reconectando stream automáticamente...");
-    setTimeout(playRadio, 1000);
-  }
+  if (isPlaying && !audio.manualPaused) setTimeout(playRadio, 1000);
 }
-
 audio.addEventListener('stalled', restartStream);
 audio.addEventListener('error', restartStream);
 audio.addEventListener('ended', restartStream);
@@ -131,13 +117,6 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('pagehide', () => { if (isPlaying) restartStream(); });
 window.addEventListener('pageshow', () => { if (isPlaying) restartStream(); });
-
-// =======================
-// VISIBILITY CHANGE (SPECTRUM)
-// =======================
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && isPlaying) animateSpectrum();
-});
 
 // =======================
 // INSTALACIÓN ANDROID
@@ -173,12 +152,26 @@ closeIosPromptBtn.addEventListener('click', () => {
 });
 
 // =======================
+// ABRIR ARTISTAS / CLIENTES SIN PAUSAR AUDIO
+// =======================
+// Unificada: siempre usa el iframe (iOS/Android/desktop)
+function abrirPagina(pagina){
+  const iframeContainer = document.getElementById('iframe-container');
+  const iframe = document.getElementById('subpage-frame');
+  const closeBtn = document.getElementById('close-frame-btn');
+
+  iframe.src = pagina;
+  iframeContainer.style.display = 'block';
+
+  closeBtn.onclick = () => {
+    iframeContainer.style.display = 'none';
+    iframe.src = '';
+  };
+}
+
+// =======================
 // PELI
 // =======================
 peliBubble.addEventListener('click', () => {
-  if (isPlaying) pauseRadio();
   peliWindow = window.open('peli.html', '_blank', 'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes');
-  window.addEventListener('message', (e) => {
-    if (e.data === 'resumeRadio') playRadio();
-  });
 });
