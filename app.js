@@ -152,26 +152,60 @@ closeIosPromptBtn.addEventListener('click', () => {
 });
 
 // =======================
-// ABRIR ARTISTAS / CLIENTES SIN PAUSAR AUDIO
+// SUBVISTAS: ARTISTAS / CLIENTES
 // =======================
-// Unificada: siempre usa el iframe (iOS/Android/desktop)
+
+// Abre subpágina en overlay sin pausar el audio
 function abrirPagina(pagina){
   const iframeContainer = document.getElementById('iframe-container');
   const iframe = document.getElementById('subpage-frame');
-  const closeBtn = document.getElementById('close-frame-btn');
 
-  iframe.src = pagina;
-  iframeContainer.style.display = 'block';
+  iframe.src = pagina;               // carga artistas.html o clientes.html
+  iframeContainer.style.display = 'block'; // muestra overlay
+  document.body.classList.add('subview-open'); // oculta la UI del index (pero NO el audio)
 
-  closeBtn.onclick = () => {
-    iframeContainer.style.display = 'none';
-    iframe.src = '';
-  };
+  // Hacer que el botón "Atrás" cierre la subvista
+  if (!history.state || !history.state.subview) {
+    history.pushState({ subview: true }, '');
+  }
 }
 
+// Disponible para que el hijo pueda “volver al inicio”
+window.cerrarSubview = function (){
+  const iframeContainer = document.getElementById('iframe-container');
+  const iframe = document.getElementById('subpage-frame');
+
+  iframeContainer.style.display = 'none';
+  iframe.src = 'about:blank';
+  document.body.classList.remove('subview-open');
+
+  // Si estamos en un estado de subvista, regresar uno en el historial para no acumular
+  if (history.state && history.state.subview) {
+    history.back();
+  }
+};
+
+// Cerrar subvista al presionar Atrás del navegador
+window.addEventListener('popstate', () => {
+  const iframeContainer = document.getElementById('iframe-container');
+  if (iframeContainer && iframeContainer.style.display === 'block') {
+    window.cerrarSubview();
+  }
+});
+
+// Aceptar mensajes desde iframes (fallback universal)
+window.addEventListener('message', (e) => {
+  if (e && e.data && e.data.type === 'close-subview') {
+    if (typeof window.cerrarSubview === 'function') window.cerrarSubview();
+  }
+});
+
 // =======================
-// PELI
+// PELI → debe pausar la radio
 // =======================
 peliBubble.addEventListener('click', () => {
-  peliWindow = window.open('peli.html', '_blank', 'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes');
+  pauseRadio(); // obligatorio
+  const features = 'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes';
+  window.open('peli.html', '_blank', features);
 });
+

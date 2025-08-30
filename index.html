@@ -51,6 +51,8 @@
     gap: 0;
     text-align: center;
   }
+
+  /* Overlay del iframe (pantalla limpia) */
   #iframe-container {
     display:none;
     position:fixed;
@@ -62,17 +64,12 @@
   #iframe-container iframe {
     width:100%; height:100%; border:none;
   }
-  #close-frame-btn {
-    position:absolute;
-    top:10px; left:10px;
-    z-index:1000;
-    padding:10px 16px;
-    background:#ffcc00;
-    border:none;
-    border-radius:999px;
-    font-weight:bold;
-    cursor:pointer;
-  }
+  /* Botón interno opcional (lo dejamos oculto para que no haya "nada extra") */
+  #close-frame-btn { display:none; }
+
+  /* Mientras la subvista está abierta, ocultar toda la UI del index,
+     pero el <audio> sigue vivo y sonando */
+  .subview-open > *:not(#iframe-container) { visibility: hidden !important; }
 </style>
 </head>
 <body>
@@ -139,6 +136,8 @@ function compartirApp(){
 </script>
 </body>
 </html>
+
+
 
 
 

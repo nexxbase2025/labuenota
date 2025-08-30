@@ -29,7 +29,13 @@ html, body { margin:0; padding:0; overflow:hidden; height:100%; width:100%; back
   </div>
 </main>
 
-<button class="volver" onclick="window.parent.document.getElementById('close-frame-btn').click()">⬅ Volver al inicio</button>
+<!-- Volver: intenta función del padre y, si no, usa postMessage -->
+<button class="volver" onclick="(function(){
+  try { if (parent && parent.cerrarSubview) return parent.cerrarSubview(); } catch(e){}
+  if (window.top && window.top.postMessage) {
+    window.top.postMessage({ type: 'close-subview' }, '*');
+  }
+})()">⬅ Volver al inicio</button>
 
 <script>
 const cylinder = document.getElementById('cylinder-clientes');
@@ -55,3 +61,6 @@ window.addEventListener('resize', positionPanels);
 </script>
 </body>
 </html>
+
+
+
