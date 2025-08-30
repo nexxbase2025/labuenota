@@ -55,11 +55,13 @@ function animateSpectrum() {
 }
 
 // =======================
-// REPRODUCCIÓN RADIO AJUSTADA
+// REPRODUCCIÓN RADIO AJUSTADA PARA ANDROID/iOS
 // =======================
 function playRadio() {
   audio.manualPaused = false;
-  audio.load(); // Forzar carga del stream
+
+  // Forzar carga del stream si se reinicia
+  audio.load();
 
   // AudioContext para Android/iOS
   if (!window.audioCtx) {
@@ -69,11 +71,15 @@ function playRadio() {
   }
   if (window.audioCtx.state === 'suspended') window.audioCtx.resume();
 
+  // Intentar reproducir el audio, con reintentos si falla
   audio.play().then(() => {
     playPauseBtn.textContent = '⏸';
     isPlaying = true;
     animateSpectrum();
-  }).catch(err => console.error('Error al reproducir:', err));
+  }).catch(err => {
+    console.warn('Error al reproducir, reintentando...', err);
+    setTimeout(playRadio, 1000);
+  });
 }
 
 function pauseRadio() {
@@ -107,11 +113,11 @@ audio.addEventListener('pause', () => {
 });
 
 // =======================
-// RECONEXIÓN AUTOMÁTICA
+// RECONEXIÓN AUTOMÁTICA Y DETECCIÓN DE PAUSA INDEBIDA
 // =======================
 function restartStream() {
   if (isPlaying && !audio.manualPaused) {
-    console.log("♻️ Intentando reconectar el stream...");
+    console.log("♻️ Reconectando stream automáticamente...");
     setTimeout(playRadio, 1000);
   }
 }
@@ -123,6 +129,8 @@ window.addEventListener('online', () => { if (isPlaying) restartStream(); });
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && isPlaying && audio.paused) restartStream();
 });
+window.addEventListener('pagehide', () => { if (isPlaying) restartStream(); });
+window.addEventListener('pageshow', () => { if (isPlaying) restartStream(); });
 
 // =======================
 // VISIBILITY CHANGE (SPECTRUM)
