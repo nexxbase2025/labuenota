@@ -6,18 +6,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>NUESTROS ARTISTAS</title>
 <style>
-  html, body { margin:0; padding:0; overflow:hidden; height:100%; width:100%; background:#ff0000; font-family: Arial,sans-serif; }
-  header { position:fixed; top:0; left:0; right:0; height:56px; background:#0f0f0f; display:flex; align-items:center; justify-content:center; z-index:100; border-bottom:1px solid #2a2a2a; }
-  header h1{margin:0;font-size:16px;color:#fff;}
-  .zone{position:absolute;top:56px;left:0;right:0;bottom:0;display:flex;align-items:flex-start;justify-content:center;perspective:1400px;padding-top:50px;}
-  .cylinder{position:relative;width:min(70vw,300px);height:calc(min(70vw,300px)*1.25);transform-style:preserve-3d;transition:transform 0.4s ease-out;}
-  .panel{position:absolute;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;backface-visibility:hidden;}
-  .panel img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;border-radius:16px;box-shadow:0 0 15px rgba(255,255,255,0.2);}
-  .info{padding:8px;text-align:center;font-size:clamp(12px,2vw,15px);color:#fff;background:#111;border-radius:0 0 12px 12px;margin-top:4px;}
-  .info h3{margin:0 0 4px;color:#ffcc00;}
-  .info .whatsapp-btn{display:inline-block;margin-top:4px;padding:4px 8px;font-size:12px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold;}
-  .info .whatsapp-btn:hover{background:#1ebe5d;}
-  .volver{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);padding:12px 20px;background:#ffcc00;color:#000;font-weight:800;border:none;border-radius:999px;cursor:pointer;z-index:100;box-shadow:0 6px 16px rgba(0,0,0,.35);}
+/* Todo el CSS igual que tu versión original */
+html, body { margin:0; padding:0; overflow:hidden; height:100%; width:100%; background:#ff0000; font-family:Arial,sans-serif; }
+header { position:fixed; top:0; left:0; right:0; height:56px; background:#0f0f0f; display:flex; align-items:center; justify-content:center; z-index:100; border-bottom:1px solid #2a2a2a; }
+header h1 { margin:0; font-size:16px; color:#fff; }
+.zone { position:absolute; top:56px; left:0; right:0; bottom:0; display:flex; align-items:flex-start; justify-content:center; perspective:1400px; padding-top:50px; }
+.cylinder { position:relative; width:min(70vw,300px); height:calc(min(70vw,300px)*1.25); transform-style:preserve-3d; transform:rotateY(0deg); transition:transform 0.4s ease-out; }
+.panel { position:absolute; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; backface-visibility:hidden; }
+.panel img { width:100%; height:auto; aspect-ratio:4/5; object-fit:cover; border-radius:16px; box-shadow:0 0 15px rgba(255,255,255,0.2); }
+.info { padding:8px; text-align:center; font-size:clamp(12px,2vw,15px); color:#fff; background:#111; border-radius:0 0 12px 12px; margin-top:4px; }
+.info h3 { margin:0 0 4px; color:#ffcc00; }
+.info .whatsapp-btn { display:inline-block; margin-top:4px; padding:4px 8px; font-size:12px; background:#25D366; color:#fff; border-radius:8px; text-decoration:none; font-weight:bold; }
+.info .whatsapp-btn:hover { background:#1ebe5d; }
+.volver { position:fixed; left:50%; bottom:40px; transform:translateX(-50%); padding:12px 20px; background:#ffcc00; color:#000; font-weight:800; border:none; border-radius:999px; cursor:pointer; z-index:100; box-shadow:0 6px 16px rgba(0,0,0,.35); }
 </style>
 </head>
 <body>
@@ -25,49 +26,39 @@
 
 <main class="zone">
   <div class="cylinder" id="cylinder">
-    <!-- Paneles aquí -->
-    <div class="panel">
-      <img src="1 AR.webp" alt="Artista 1">
-      <div class="info"><h3>DON BELTRAN</h3><p>Contácta a Don Beltrán para un demo GRATIS!</p><a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a></div>
-    </div>
-    <div class="panel">
-      <img src="2 AR.webp" alt="Artista 2">
-      <div class="info"><h3>Artista 2</h3><p>Contáctanos y reserva este espacio para ti!</p><a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a></div>
-    </div>
-    <div class="panel">
-      <img src="3 AR.webp" alt="Artista 3">
-      <div class="info"><h3>Artista 3</h3><p>Contáctanos y reserva este espacio para ti!</p><a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a></div>
-    </div>
-    <div class="panel">
-      <img src="4 AR.webp" alt="Artista 4">
-      <div class="info"><h3>Artista 4</h3><p>Contáctanos y reserva este espacio para ti!</p><a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a></div>
-    </div>
+    <!-- Paneles idénticos a tu versión original -->
+    <div class="panel"><img src="1 AR.webp" alt="Artista 1"><div class="info"><h3>DON BELTRAN</h3><p>Contácta a Don Beltrán para un demo GRATIS!</p><a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a></div></div>
+    <div class="panel"><img src="2 AR.webp" alt="Artista 2"><div class="info"><h3>Artista 2</h3><p>Contáctanos y reserva este espacio para ti!</p><a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a></div></div>
+    <div class="panel"><img src="3 AR.webp" alt="Artista 3"><div class="info"><h3>Artista 3</h3><p>Contáctanos y reserva este espacio para ti!</p><a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a></div></div>
+    <div class="panel"><img src="4 AR.webp" alt="Artista 4"><div class="info"><h3>Artista 4</h3><p>Contáctanos y reserva este espacio para ti!</p><a href="https://wa.me/593983706294" target="_blank" class="whatsapp-btn">💬 WhatsApp</a></div></div>
   </div>
 </main>
 
-<button class="volver" onclick="window.close()">⬅ Volver al inicio</button>
+<button class="volver" onclick="location.href='index.html'">⬅ Volver al inicio</button>
 
 <script>
-  const cylinder = document.getElementById('cylinder');
-  const panels = cylinder.querySelectorAll('.panel');
-  const total = panels.length;
-  const angle = 360 / total;
-  let rotationY = 0;
+const cylinder = document.getElementById('cylinder');
+const panels = cylinder.querySelectorAll('.panel');
+const total = panels.length;
+const angle = 360 / total;
+let rotationY = 0;
 
-  function positionPanels(){
-    const radius = (cylinder.offsetWidth / 2) / Math.tan(Math.PI/total);
-    panels.forEach((panel,i)=>panel.style.transform=`rotateY(${i*angle}deg) translateZ(${radius}px)`);
-  }
-  positionPanels();
+function positionPanels() {
+  const radius = (cylinder.offsetWidth / 2) / Math.tan(Math.PI / total);
+  panels.forEach((panel, i) => {
+    panel.style.transform = `rotateY(${i*angle}deg) translateZ(${radius}px)`;
+  });
+}
+positionPanels();
 
-  let dragging=false, startX=0;
-  cylinder.addEventListener('mousedown', e=>{dragging=true; startX=e.clientX;});
-  cylinder.addEventListener('touchstart', e=>{dragging=true; startX=e.touches[0].clientX;});
-  window.addEventListener('mousemove', e=>{if(!dragging)return; const dx=e.clientX-startX; rotationY+=dx*0.3; cylinder.style.transform=`rotateY(${rotationY}deg)`; startX=e.clientX;});
-  window.addEventListener('touchmove', e=>{if(!dragging)return; const dx=e.touches[0].clientX-startX; rotationY+=dx*0.3; cylinder.style.transform=`rotateY(${rotationY}deg)`; startX=e.touches[0].clientX;});
-  window.addEventListener('mouseup', ()=>dragging=false);
-  window.addEventListener('touchend', ()=>dragging=false);
-  window.addEventListener('resize', positionPanels);
+let dragging=false, startX=0;
+cylinder.addEventListener('mousedown', e=>{dragging=true; startX=e.clientX;});
+cylinder.addEventListener('touchstart', e=>{dragging=true; startX=e.touches[0].clientX;});
+window.addEventListener('mousemove', e=>{if(!dragging) return; const dx=e.clientX-startX; rotationY+=dx*0.3; cylinder.style.transform=`rotateY(${rotationY}deg)`; startX=e.clientX;});
+window.addEventListener('touchmove', e=>{if(!dragging) return; const dx=e.touches[0].clientX-startX; rotationY+=dx*0.3; cylinder.style.transform=`rotateY(${rotationY}deg)`; startX=e.touches[0].clientX;});
+window.addEventListener('mouseup', ()=>dragging=false);
+window.addEventListener('touchend', ()=>dragging=false);
+window.addEventListener('resize', positionPanels);
 </script>
 </body>
 </html>

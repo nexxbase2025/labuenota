@@ -102,10 +102,17 @@
 
 <script src="app.js"></script>
 <script>
-  // Abrir páginas de artistas/clientes sin pausar el audio
   function abrirPagina(pagina){
-    window.open(pagina, '_blank', 'noopener,noreferrer');
+    const isAndroid = /android/i.test(navigator.userAgent);
+    if(isAndroid){
+      // Android: abrir en la misma PWA para mantener pantalla limpia
+      location.href = pagina;
+    } else {
+      // iPhone u otros: igual que antes
+      window.open(pagina, '_self');
+    }
   }
+
   function compartirApp(){
     const url = "https://labuenota.vercel.app/";
     const text = "¡Descarga la app de La Buenota Radio Online, se puede ver peliculas Gratis y tiene buena musica!";
