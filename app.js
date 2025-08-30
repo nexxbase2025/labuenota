@@ -208,4 +208,16 @@ peliBubble.addEventListener('click', () => {
   const features = 'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes';
   window.open('peli.html', '_blank', features);
 });
+// =======================
+// FUNCIÓN COMPARTIR APP
+// =======================
+function compartirApp() {
+  const url = "https://labuenota.vercel.app/";
+  const text = "¡Descarga la app de La Buenota Radio Online, se puede ver películas Gratis y tiene buena música!";
+  if (navigator.share) {
+    navigator.share({ title: "La Buenota Radio Online", text, url }).catch(console.error);
+  } else {
+    prompt("Copia el enlace para compartir:", url);
+  }
+}
 
