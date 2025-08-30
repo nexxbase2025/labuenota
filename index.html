@@ -102,29 +102,16 @@
 
 <script src="app.js"></script>
 <script>
-  // ========================================
-  // NAVEGACIÓN SEGURA PARA ARTISTAS Y CLIENTES
-  // ========================================
-  function abrirPagina(pagina){
-    window.open(pagina, '_self');
-  }
-
-  // ========================================
-  // BOTÓN COMPARTIR
-  // ========================================
+  function abrirPagina(pagina){ window.open(pagina, '_self'); }
   function compartirApp(){
     const url = "https://labuenota.vercel.app/";
     const text = "¡Descarga la app de La Buenota Radio Online, se puede ver peliculas Gratis y tiene buena musica!";
-    if(navigator.share){
-      navigator.share({title:"La Buenota Radio Online", text, url}).catch(console.error);
-    } else {
-      alert("Comparte el enlace: " + url);
-    }
+    if(navigator.share){ navigator.share({title:"La Buenota Radio Online", text, url}).catch(console.error); }
+    else { alert("Comparte el enlace: " + url); }
   }
 </script>
 </body>
 </html>
-
 
 
 

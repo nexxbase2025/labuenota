@@ -1,7 +1,5 @@
 
-
-/* service-worker.js */
-const CACHE_NAME = 'la-buenota-radio-online-v3'; // Cambia versión si modificas recursos
+const CACHE_NAME = 'la-buenota-radio-online-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -28,9 +26,7 @@ const STATIC_ASSETS = [
 self.addEventListener('install', event => {
   console.log('[SW] Instalando...');
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
@@ -39,27 +35,21 @@ self.addEventListener('install', event => {
 self.addEventListener('fetch', event => {
   const req = event.request;
 
-  // Ignorar peticiones externas (de otro dominio)
+  // Ignorar peticiones externas
   if (new URL(req.url).origin !== location.origin) return;
 
-  // No cachear audio y video (streaming)
+  // NO CACHEAR STREAMING (audio/video) → así el streaming siempre va directo
   if (req.destination === 'audio' || req.destination === 'video') return;
 
   event.respondWith(
     caches.match(req).then(cachedResponse => {
-      // Inicia la petición a la red
       const fetchPromise = fetch(req).then(networkResponse => {
-        // Solo cachear GET con respuesta exitosa
         if (req.method === 'GET' && networkResponse.status === 200) {
           caches.open(CACHE_NAME).then(cache => cache.put(req, networkResponse.clone()));
         }
         return networkResponse;
-      }).catch(() => {
-        // Si falla la red, devolver la cache si existe o la página de inicio
-        return cachedResponse || caches.match('./');
-      });
+      }).catch(() => cachedResponse || caches.match('./'));
 
-      // Devuelve primero el cache (rápido) y luego actualiza cache en segundo plano
       return cachedResponse || fetchPromise;
     })
   );

@@ -12,18 +12,6 @@
     object-fit:contain;
     background:black;
   }
-
-  /* Quitar botón de descarga en todos los navegadores */
-  video::-webkit-media-controls-enclosure {
-    overflow: hidden;
-  }
-  video::-webkit-media-controls-download-button {
-    display: none;
-  }
-  video::-internal-media-controls-download-button {
-    display: none;
-  }
-
   #backButton {
     position: fixed;
     top: 20px; left: 20px;
@@ -49,10 +37,8 @@
 </head>
 <body>
 
-<video id="movie" controls playsinline webkit-playsinline
-       controlsList="nodownload noremoteplayback noplaybackrate" 
-       disablePictureInPicture>
-  <source src="https://ia801801.us.archive.org/27/items/pets-united-2020-latino-1080-streaming-latino/bad%20boy%203.ia.mp4" type="video/mp4">
+<video id="movie" controls playsinline webkit-playsinline>
+  <source src="https://ia801801.us.archive.org/27/items/pets-united-2020-latino-1080-streaming-latino/bad%20boy%203.ia.mp4">
   Tu navegador no soporta el video.
 </video>
 
@@ -114,7 +100,7 @@ async function playAdsSequence(){
   const originalType = movie.querySelector('source').type;
 
   // Determinar cuántos anuncios se van a reproducir en esta tanda
-  const adsToPlay = 2;
+  const adsToPlay = 2; // <--- Cambia este número: 1, 2, 3, 4...
 
   for(let i=0; i<adsToPlay; i++){
     const adSrc = ads[currentAdIndex];
@@ -183,6 +169,8 @@ movie.addEventListener('seeked', ()=>{
 
 </body>
 </html>
+
+
 
 
 

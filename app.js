@@ -33,12 +33,8 @@ if ('mediaSession' in navigator) {
     ]
   });
 
-  navigator.mediaSession.setActionHandler('play', () => {
-    playRadio();
-  });
-  navigator.mediaSession.setActionHandler('pause', () => {
-    pauseRadio();
-  });
+  navigator.mediaSession.setActionHandler('play', () => { playRadio(); });
+  navigator.mediaSession.setActionHandler('pause', () => { pauseRadio(); });
 }
 
 // =======================
@@ -59,10 +55,11 @@ function animateSpectrum() {
 }
 
 // =======================
-// REPRODUCCIÓN RADIO
+// REPRODUCCIÓN RADIO AJUSTADA
 // =======================
 function playRadio() {
   audio.manualPaused = false;
+  audio.load(); // Forzar carga del stream
 
   // AudioContext para Android/iOS
   if (!window.audioCtx) {
@@ -110,13 +107,28 @@ audio.addEventListener('pause', () => {
 });
 
 // =======================
-// VISIBILITY CHANGE
+// RECONEXIÓN AUTOMÁTICA
+// =======================
+function restartStream() {
+  if (isPlaying && !audio.manualPaused) {
+    console.log("♻️ Intentando reconectar el stream...");
+    setTimeout(playRadio, 1000);
+  }
+}
+
+audio.addEventListener('stalled', restartStream);
+audio.addEventListener('error', restartStream);
+audio.addEventListener('ended', restartStream);
+window.addEventListener('online', () => { if (isPlaying) restartStream(); });
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && isPlaying && audio.paused) restartStream();
+});
+
+// =======================
+// VISIBILITY CHANGE (SPECTRUM)
 // =======================
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && isPlaying) {
-    animateSpectrum();
-    if (audio.paused) playRadio();
-  }
+  if (document.visibilityState === 'visible' && isPlaying) animateSpectrum();
 });
 
 // =======================
@@ -157,9 +169,7 @@ closeIosPromptBtn.addEventListener('click', () => {
 // =======================
 peliBubble.addEventListener('click', () => {
   if (isPlaying) pauseRadio();
-
   peliWindow = window.open('peli.html', '_blank', 'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes');
-
   window.addEventListener('message', (e) => {
     if (e.data === 'resumeRadio') playRadio();
   });
