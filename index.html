@@ -102,7 +102,10 @@
 
 <script src="app.js"></script>
 <script>
-  function abrirPagina(pagina){ window.open(pagina, '_self'); }
+  // Abrir páginas de artistas/clientes sin pausar el audio
+  function abrirPagina(pagina){
+    window.open(pagina, '_blank', 'noopener,noreferrer');
+  }
   function compartirApp(){
     const url = "https://labuenota.vercel.app/";
     const text = "¡Descarga la app de La Buenota Radio Online, se puede ver peliculas Gratis y tiene buena musica!";
@@ -112,6 +115,7 @@
 </script>
 </body>
 </html>
+
 
 
 
