@@ -29,7 +29,7 @@ body {
 /* BURBUJA PELI */
 #peli-bubble {
   position: fixed;
-  bottom: 345px;
+  bottom: 360px;
   left: 50%;
   transform: translateX(-50%);
   background: #f1bd02;
@@ -90,7 +90,7 @@ body {
 }
 .gallery-item { 
   flex: 0 0 auto; 
-  width: 70vw; 
+  width: 80vw; 
   aspect-ratio: 16 / 9; 
   scroll-snap-align: center; 
   border-radius: 12px; 
