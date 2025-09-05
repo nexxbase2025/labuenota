@@ -19,7 +19,7 @@ body {
 #logo {
   width: 190px;
   position: fixed;
-  top: 10px;
+  top: 15px;
   left: 50%;
   transform: translateX(-50%);
   transition: transform 0.1s ease;
