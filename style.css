@@ -254,8 +254,8 @@ body {
   height: auto;  /* lo controla JS */
 }
 .panel img {
-  width: 80%;
-  height: 80%;
+  width: 180%;
+  height: 180%;
   object-fit: cover;
   display: block;
 }
