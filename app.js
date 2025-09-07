@@ -10,33 +10,38 @@ const iosInstallPrompt = document.getElementById('ios-install-prompt');
 const closeIosPromptBtn = document.getElementById('closeIosPromptBtn');
 const peliBubble = document.getElementById('peli-bubble');
 
+// Estado
 let isPlaying = false;
-let animationId;
-let deferredPrompt;
-
-// Flags de control
-let autoPausedByFocus = false; // pausa por llamada / otra app con audio
-let forceReload = false;       // reconexión dura tras error de red
-let unlocked = false;          // audio desbloqueado por gesto
+let manualPaused = false;       // true solo cuando el usuario pulsa "pausa"
+let autoInterrupted = false;    // true si el SO u otra app nos interrumpió
+let lastPlayClick = 0;          // para evitar “play→pause” inmediato falso
+let animationId = null;
+let deferredPrompt = null;
 let keepAliveTimer = null;
 
-// --- Botón CTA para desbloquear audio si el navegador lo exige
-let activateBtn = document.getElementById('activateSound');
-if (!activateBtn) {
-  activateBtn = document.createElement('button');
-  activateBtn.id = 'activateSound';
-  activateBtn.textContent = 'Tocar para reanudar';
-  activateBtn.style.display = 'none';
-  document.body.appendChild(activateBtn);
+// =======================
+// ESPECTRO (sin tocar estilos / DOM)
+// =======================
+const bars = [];
+for (let i = 0; i < 16; i++) {
+  const bar = document.createElement('div');
+  bar.className = 'bar';
+  spectrum.appendChild(bar);
+  bars.push(bar);
 }
-activateBtn.addEventListener('click', () => {
-  activateBtn.style.display = 'none';
-  unlockAudio();
-  playRadio(true).catch(() => {});
-});
+function animateSpectrum() {
+  bars.forEach(bar => bar.style.height = `${Math.random() * 100}%`);
+  animationId = requestAnimationFrame(animateSpectrum);
+}
+function startSpectrum() {
+  if (!animationId) animateSpectrum();
+}
+function stopSpectrum() {
+  if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+}
 
 // =======================
-// MEDIA SESSION (pantalla de bloqueo)
+// MEDIA SESSION
 // =======================
 if ('mediaSession' in navigator) {
   navigator.mediaSession.metadata = new MediaMetadata({
@@ -52,86 +57,52 @@ if ('mediaSession' in navigator) {
       { src: 'ivibra.webp', sizes: '512x512', type: 'image/webp' }
     ]
   });
-
-  navigator.mediaSession.setActionHandler('play', () => { playRadio().catch(()=>{}); });
-  navigator.mediaSession.setActionHandler('pause', () => { pauseRadio(); });
+  navigator.mediaSession.setActionHandler('play', () => playRadio().catch(()=>{}));
+  navigator.mediaSession.setActionHandler('pause', () => pauseRadio());
 }
 
 // =======================
-// ESPECTRO (sin cambios visuales; animación aleatoria)
-// =======================
-const bars = [];
-for (let i = 0; i < 16; i++) {
-  const bar = document.createElement('div');
-  bar.className = 'bar';
-  spectrum.appendChild(bar);
-  bars.push(bar);
-}
-function animateSpectrum() {
-  bars.forEach(bar => bar.style.height = `${Math.random() * 100}%`);
-  const logo = document.getElementById('logo');
-  if (logo) logo.style.transform = `translateX(-50%) scale(${1 + Math.random() * 0.1})`;
-  animationId = requestAnimationFrame(animateSpectrum);
-}
-function startSpectrum() {
-  if (!animationId) animateSpectrum();
-}
-function stopSpectrum() {
-  if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-}
-
-// =======================
-// DESBLOQUEO AUDIO AL PRIMER GESTO (iOS/Android)
-// =======================
-// Nota: no usamos AudioContext para que el audio nativo pueda seguir en background.
-function unlockAudio() {
-  if (unlocked) return;
-  unlocked = true;
-  try {
-    const wasMuted = audio.muted;
-    audio.muted = true;
-    audio.play().then(() => audio.pause()).finally(() => { audio.muted = wasMuted; });
-  } catch (e) {}
-}
-['pointerdown','touchstart','mousedown','keydown'].forEach(evt => {
-  document.addEventListener(evt, unlockAudio, { once: true, passive: true });
-});
-
-// =======================
-// REPRODUCCIÓN ROBUSTA
+// UTILIDADES AUDIO
 // =======================
 function ensureBaseSrc() {
   if (!audio.dataset.src) audio.dataset.src = audio.src;
 }
+function cacheBustedSrc() {
+  const base = audio.dataset.src || audio.src;
+  const sep = base.includes('?') ? '&' : '?';
+  return `${base}${sep}ts=${Date.now()}`;
+}
 
-function playRadio(reload = false) {
+// Reproducción robusta sin burbujas extras
+async function playRadio(reload = false) {
   ensureBaseSrc();
-  audio.manualPaused = false;
+  manualPaused = false;
+  lastPlayClick = Date.now();
 
-  // Recarga dura solo en caso necesario
-  if (reload || forceReload) {
-    const base = audio.dataset.src;
-    const sep = base.includes('?') ? '&' : '?';
-    audio.src = `${base}${sep}ts=${Date.now()}`; // cache-buster
-    forceReload = false;
+  if (reload) {
+    audio.src = cacheBustedSrc();
     audio.load();
   }
 
-  return audio.play().then(() => {
+  try {
+    await audio.play(); // esperamos a que realmente inicie
     isPlaying = true;
+    autoInterrupted = false;
     playPauseBtn && (playPauseBtn.textContent = '⏸');
     startSpectrum();
-    showActivate(false);
     startKeepAlive();
-  }).catch(err => {
-    showActivate(true);
-    console.warn('Reproducción bloqueada o fallida hasta interacción del usuario.', err);
+  } catch (err) {
+    // Si el navegador no deja (p. ej. sin gesto), no mostramos nada: el usuario puede tocar Play.
+    console.warn('Bloqueado hasta interacción del usuario (silencioso):', err);
+    isPlaying = false;
+    stopSpectrum();
+    stopKeepAlive();
     throw err;
-  });
+  }
 }
 
 function pauseRadio() {
-  audio.manualPaused = true;
+  manualPaused = true;
   audio.pause();
   isPlaying = false;
   playPauseBtn && (playPauseBtn.textContent = '▶');
@@ -139,47 +110,39 @@ function pauseRadio() {
   stopKeepAlive();
 }
 
-function showActivate(show) {
-  if (!activateBtn) return;
-  activateBtn.style.display = show ? 'block' : 'none';
-}
-
 // =======================
-// BOTÓN PLAY / PAUSE
+// EVENTOS <audio> — estados reales
 // =======================
-playPauseBtn && playPauseBtn.addEventListener('click', () => {
-  if (!isPlaying) playRadio().catch(() => {});
-  else pauseRadio();
-});
-
-// =======================
-// POLÍTICA DE PAUSA/REANUDACIÓN
-// =======================
-// IMPORTANTE: NO pausar por pantalla apagada o background.
-// Dejamos que el SO gestione el foco de audio.
-// Si el SO nos interrumpe (llamada / otra app), el <audio> emite 'pause'.
-// Marcamos autoPausedByFocus y reanudamos al volver al frente.
-
-audio.addEventListener('pause', () => {
-  // Si no fue el usuario quien pausó, interpretamos que el SO u otra app nos interrumpió.
-  if (isPlaying && !audio.manualPaused) {
-    autoPausedByFocus = true;
-    stopSpectrum(); // detener animación para ahorrar
-  }
-});
-
-audio.addEventListener('play', () => {
+audio.addEventListener('playing', () => {
   isPlaying = true;
   playPauseBtn && (playPauseBtn.textContent = '⏸');
   startSpectrum();
   startKeepAlive();
 });
+audio.addEventListener('pause', () => {
+  // Ignorar “pausa fantasma” dentro de 1200ms tras pulsar play (evita el bug de doble toque)
+  const justStarted = (Date.now() - lastPlayClick) < 1200;
+  if (!manualPaused && !justStarted) {
+    // interpretamos interrupción del sistema u otra app
+    autoInterrupted = true;
+  }
+  if (manualPaused || !isPlaying) {
+    stopSpectrum();
+    stopKeepAlive();
+  }
+});
 
-// Al volver al frente, si fue pausa por foco, reanudamos.
+// Reconectar rápido si el stream se congela
+['stalled','error','ended','abort','waiting'].forEach(evt => {
+  audio.addEventListener(evt, () => hardRestart());
+});
+
+// =======================
+// AUTO-RESUME tras llamada/TikTok/volver a la app
+// =======================
 function tryAutoResume() {
-  if (autoPausedByFocus && !audio.manualPaused) {
-    autoPausedByFocus = false;
-    playRadio(false).catch(() => { showActivate(true); });
+  if (autoInterrupted && !manualPaused) {
+    playRadio(false).catch(()=>{ /* sin burbujas */ });
   }
 }
 window.addEventListener('focus', tryAutoResume);
@@ -188,34 +151,28 @@ document.addEventListener('visibilitychange', () => {
   if (!document.hidden) tryAutoResume();
 });
 
+// Importante: NO pausar por pantalla apagada / background.
+// (No añadimos listeners de pause por visibility/blur/pagehide)
+
 // =======================
-// REINTENTOS Y RECONECTAR STREAM
+// REINTENTOS Y CAMBIO DE RED
 // =======================
-function hardRestart(delay = 300) {
-  if (!audio.manualPaused) {
-    forceReload = true;
-    setTimeout(() => playRadio(true).catch(() => { showActivate(true); }), delay);
+function hardRestart(delay = 250) {
+  if (!manualPaused) {
+    setTimeout(() => playRadio(true).catch(()=>{}), delay);
   }
 }
-['stalled','error','ended','abort','waiting'].forEach(evt => {
-  audio.addEventListener(evt, () => hardRestart());
-});
-window.addEventListener('online', () => hardRestart(100));
-
-// Reaccionar al cambio de red (Wi-Fi/datos)
-if ('connection' in navigator && navigator.connection && navigator.connection.addEventListener) {
-  navigator.connection.addEventListener('change', () => hardRestart(100));
+window.addEventListener('online', () => hardRestart(120));
+if ('connection' in navigator && navigator.connection?.addEventListener) {
+  navigator.connection.addEventListener('change', () => hardRestart(120));
 }
 
-// Keep-alive: si el reproductor se queda pausado por red en primer plano, reintenta suave
+// Keep-alive suave: si en primer plano el audio queda pausado por red, intenta reproducir
 function startKeepAlive() {
   stopKeepAlive();
   keepAliveTimer = setInterval(() => {
-    if (!audio.manualPaused && isPlaying) {
-      // Si estamos visibles y el audio aparece pausado, intenta reproducir
-      if (document.visibilityState === 'visible' && audio.paused) {
-        playRadio(false).catch(()=>{});
-      }
+    if (!manualPaused && document.visibilityState === 'visible') {
+      if (audio.paused) playRadio(false).catch(()=>{});
     }
   }, 5000);
 }
@@ -224,8 +181,16 @@ function stopKeepAlive() {
 }
 
 // =======================
-// INSTALACIÓN ANDROID (sin cambios)
-/// ======================
+// BOTÓN PLAY/PAUSE
+// =======================
+playPauseBtn && playPauseBtn.addEventListener('click', () => {
+  if (!isPlaying) playRadio().catch(()=>{});
+  else pauseRadio();
+});
+
+// =======================
+// INSTALACIÓN ANDROID (igual)
+// =======================
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
@@ -241,7 +206,7 @@ installBubble && installBubble.addEventListener('click', async () => {
 });
 
 // =======================
-// INSTALACIÓN IOS (sin cambios)
+// INSTALACIÓN IOS (igual)
 // =======================
 function isIos() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
 function isInStandaloneMode() { return ('standalone' in window.navigator) && window.navigator.standalone; }
@@ -256,7 +221,7 @@ closeIosPromptBtn && closeIosPromptBtn.addEventListener('click', () => {
 });
 
 // =======================
-// SUBVISTAS internas (galería/clientes) mantienen audio
+// SUBVISTAS internas (mantienen audio)
 // =======================
 function abrirPagina(pagina){
   const iframeContainer = document.getElementById('iframe-container');
@@ -270,7 +235,6 @@ function abrirPagina(pagina){
   }
 }
 window.abrirPagina = abrirPagina;
-
 window.cerrarSubview = function (){
   const iframeContainer = document.getElementById('iframe-container');
   const iframe = document.getElementById('subpage-frame');
@@ -287,13 +251,13 @@ window.addEventListener('popstate', () => {
   }
 });
 window.addEventListener('message', (e) => {
-  if (e && e.data && e.data.type === 'close-subview') {
+  if (e?.data?.type === 'close-subview') {
     if (typeof window.cerrarSubview === 'function') window.cerrarSubview();
   }
 });
 
 // =======================
-// Peli → pausar la radio (como antes)
+// Peli → pausar la radio (sin cambios)
 // =======================
 peliBubble && peliBubble.addEventListener('click', () => {
   pauseRadio();
@@ -302,7 +266,7 @@ peliBubble && peliBubble.addEventListener('click', () => {
 });
 
 // =======================
-// Compartir (como antes)
+// Compartir (igual)
 // =======================
 function compartirApp() {
   const url = "https://labuenota.vercel.app/";
