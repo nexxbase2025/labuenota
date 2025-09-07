@@ -14,6 +14,26 @@ let isPlaying = false;
 let animationId;
 let deferredPrompt;
 
+// --- NUEVO: control de pausas automáticas y reconexión
+let autoPausedByFocus = false; // pausa por llamada / cambio de app
+let forceReload = false;       // reconexión dura tras error de red
+let unlocked = false;          // audio/AudioContext desbloqueado por gesto
+
+// --- NUEVO: botón “activar sonido” (usa estilos ya definidos en style.css)
+let activateBtn = document.getElementById('activateSound');
+if (!activateBtn) {
+  activateBtn = document.createElement('button');
+  activateBtn.id = 'activateSound';
+  activateBtn.textContent = 'Tocar para reanudar';
+  activateBtn.style.display = 'none';
+  document.body.appendChild(activateBtn);
+}
+activateBtn.addEventListener('click', () => {
+  activateBtn.style.display = 'none';
+  unlockAudio();
+  playRadio(true).catch(() => {});
+});
+
 // =======================
 // MEDIA SESSION (pantalla de bloqueo)
 // =======================
@@ -32,12 +52,12 @@ if ('mediaSession' in navigator) {
     ]
   });
 
-  navigator.mediaSession.setActionHandler('play', () => { playRadio(); });
+  navigator.mediaSession.setActionHandler('play', () => { playRadio().catch(()=>{}); });
   navigator.mediaSession.setActionHandler('pause', () => { pauseRadio(); });
 }
 
 // =======================
-// SPECTRUM DE BARRAS
+// SPECTRUM DE BARRAS (sin cambios visuales)
 // =======================
 const bars = [];
 for (let i = 0; i < 16; i++) {
@@ -54,25 +74,65 @@ function animateSpectrum() {
 }
 
 // =======================
-// REPRODUCCIÓN RADIO
+// DESBLOQUEO AUDIO AL PRIMER GESTO (iOS/Android)
 // =======================
-function playRadio() {
-  audio.manualPaused = false;
-  audio.load();
+function unlockAudio() {
+  if (unlocked) return;
+  unlocked = true;
+  try {
+    if (!window.audioCtx) {
+      window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const track = window.audioCtx.createMediaElementSource(audio);
+      track.connect(window.audioCtx.destination);
+    } else if (window.audioCtx.state === 'suspended') {
+      window.audioCtx.resume();
+    }
+    // micro reproducción silenciada para satisfacer el gesto en iOS
+    const wasMuted = audio.muted;
+    audio.muted = true;
+    audio.play().then(() => audio.pause()).finally(() => { audio.muted = wasMuted; });
+  } catch (e) {}
+}
+// Gesto válido en la mayoría de dispositivos
+['pointerdown','touchstart','mousedown','keydown'].forEach(evt => {
+  document.addEventListener(evt, unlockAudio, { once: true, passive: true });
+});
+
+// =======================
+// REPRODUCCIÓN RADIO (robusta)
+// =======================
+function ensureAudioGraph() {
   if (!window.audioCtx) {
     window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const track = window.audioCtx.createMediaElementSource(audio);
     track.connect(window.audioCtx.destination);
   }
   if (window.audioCtx.state === 'suspended') window.audioCtx.resume();
+  if (!audio.dataset.src) audio.dataset.src = audio.src; // guarda src base
+}
 
-  audio.play().then(() => {
+function playRadio(reload = false) {
+  audio.manualPaused = false;
+  ensureAudioGraph();
+
+  // Recarga dura solo cuando venimos de error/fin/interrupción de red
+  if (reload || forceReload) {
+    const base = audio.dataset.src;
+    const sep = base.includes('?') ? '&' : '?';
+    audio.src = `${base}${sep}ts=${Date.now()}`; // rompe caché/proxy del stream
+    forceReload = false;
+    audio.load();
+  }
+
+  return audio.play().then(() => {
     playPauseBtn.textContent = '⏸';
     isPlaying = true;
-    animateSpectrum();
+    if (!animationId) animateSpectrum();
   }).catch(err => {
-    console.warn('Error al reproducir, reintentando...', err);
-    setTimeout(playRadio, 1000);
+    // Si el navegador bloquea reproducción (autoplay), pedimos toque del usuario
+    activateBtn.style.display = 'block';
+    console.warn('Reproducción bloqueada. Esperando interacción del usuario.', err);
+    throw err;
   });
 }
 
@@ -81,42 +141,66 @@ function pauseRadio() {
   audio.pause();
   playPauseBtn.textContent = '▶';
   isPlaying = false;
-  cancelAnimationFrame(animationId);
+  if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
 }
 
 // =======================
 // BOTÓN PLAY / PAUSE
 // =======================
 playPauseBtn.addEventListener('click', () => {
-  if (!isPlaying) playRadio();
+  if (!isPlaying) playRadio().catch(() => {});
   else pauseRadio();
 });
 
 // =======================
-// DESBLOQUEO AUDIO AL TOQUE
+// PAUSAR/REANUDAR POR CAMBIO DE APP / LLAMADA
 // =======================
-document.addEventListener('touchstart', () => {
-  if (audio.paused && !isPlaying) audio.play().then(() => audio.pause()).catch(() => {});
-}, { once: true });
+function handleHide() {
+  if (!audio.paused && isPlaying) {
+    autoPausedByFocus = true;
+    // Pausa sin marcar manual (para poder reanudar sola)
+    audio.pause();
+    playPauseBtn.textContent = '▶';
+    if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+  }
+}
+function handleShow() {
+  if (autoPausedByFocus && !audio.manualPaused) {
+    autoPausedByFocus = false;
+    playRadio().catch(() => { activateBtn.style.display = 'block'; });
+  }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) handleHide(); else handleShow();
+});
+window.addEventListener('pagehide', handleHide);
+window.addEventListener('pageshow', handleShow);
+window.addEventListener('blur', handleHide);
+window.addEventListener('focus', handleShow);
 
 // =======================
-// REINTENTAR SI SE DETIENE
+// REINTENTOS INTELIGENTES SI SE DETIENE POR RED
 // =======================
-audio.addEventListener('pause', () => {
-  if (isPlaying && !audio.manualPaused) setTimeout(playRadio, 500);
-});
-function restartStream() {
-  if (isPlaying && !audio.manualPaused) setTimeout(playRadio, 1000);
+function hardRestart() {
+  if (!audio.manualPaused && isPlaying) {
+    forceReload = true;
+    setTimeout(() => playRadio(true).catch(() => { activateBtn.style.display = 'block'; }), 400);
+  }
 }
-audio.addEventListener('stalled', restartStream);
-audio.addEventListener('error', restartStream);
-audio.addEventListener('ended', restartStream);
-window.addEventListener('online', () => { if (isPlaying) restartStream(); });
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && isPlaying && audio.paused) restartStream();
+
+// Pausas no manuales en primer plano → reintento suave
+audio.addEventListener('pause', () => {
+  if (isPlaying && !audio.manualPaused) {
+    if (document.hidden || !document.hasFocus()) {
+      autoPausedByFocus = true; // reanudará al volver
+    } else {
+      setTimeout(() => playRadio(false).catch(() => { activateBtn.style.display = 'block'; }), 500);
+    }
+  }
 });
-window.addEventListener('pagehide', () => { if (isPlaying) restartStream(); });
-window.addEventListener('pageshow', () => { if (isPlaying) restartStream(); });
+
+['stalled','error','ended','abort'].forEach(evt => audio.addEventListener(evt, hardRestart));
+window.addEventListener('online', hardRestart);
 
 // =======================
 // INSTALACIÓN ANDROID
@@ -126,7 +210,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredPrompt = e;
   installBubble.style.display = 'block';
 });
-
 installBubble.addEventListener('click', async () => {
   installBubble.style.display = 'none';
   if (deferredPrompt) {
@@ -152,48 +235,34 @@ closeIosPromptBtn.addEventListener('click', () => {
 });
 
 // =======================
-// SUBVISTAS: ARTISTAS / CLIENTES
+// SUBVISTAS: ARTISTAS / CLIENTES (sin tocar audio)
 // =======================
-
-// Abre subpágina en overlay sin pausar el audio
 function abrirPagina(pagina){
   const iframeContainer = document.getElementById('iframe-container');
   const iframe = document.getElementById('subpage-frame');
-
-  iframe.src = pagina;               // carga artistas.html o clientes.html
-  iframeContainer.style.display = 'block'; // muestra overlay
-  document.body.classList.add('subview-open'); // oculta la UI del index (pero NO el audio)
-
-  // Hacer que el botón "Atrás" cierre la subvista
+  iframe.src = pagina;
+  iframeContainer.style.display = 'block';
+  document.body.classList.add('subview-open');
   if (!history.state || !history.state.subview) {
     history.pushState({ subview: true }, '');
   }
 }
+window.abrirPagina = abrirPagina;
 
-// Disponible para que el hijo pueda “volver al inicio”
 window.cerrarSubview = function (){
   const iframeContainer = document.getElementById('iframe-container');
   const iframe = document.getElementById('subpage-frame');
-
   iframeContainer.style.display = 'none';
   iframe.src = 'about:blank';
   document.body.classList.remove('subview-open');
-
-  // Si estamos en un estado de subvista, regresar uno en el historial para no acumular
-  if (history.state && history.state.subview) {
-    history.back();
-  }
+  if (history.state && history.state.subview) history.back();
 };
-
-// Cerrar subvista al presionar Atrás del navegador
 window.addEventListener('popstate', () => {
   const iframeContainer = document.getElementById('iframe-container');
   if (iframeContainer && iframeContainer.style.display === 'block') {
     window.cerrarSubview();
   }
 });
-
-// Aceptar mensajes desde iframes (fallback universal)
 window.addEventListener('message', (e) => {
   if (e && e.data && e.data.type === 'close-subview') {
     if (typeof window.cerrarSubview === 'function') window.cerrarSubview();
@@ -201,15 +270,16 @@ window.addEventListener('message', (e) => {
 });
 
 // =======================
-// PELI → debe pausar la radio
+// PELI → debe pausar la radio (se mantiene)
 // =======================
 peliBubble.addEventListener('click', () => {
   pauseRadio(); // obligatorio
   const features = 'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes';
   window.open('peli.html', '_blank', features);
 });
+
 // =======================
-// FUNCIÓN COMPARTIR APP
+// FUNCIÓN COMPARTIR APP (se mantiene)
 // =======================
 function compartirApp() {
   const url = "https://labuenota.vercel.app/";
@@ -220,4 +290,5 @@ function compartirApp() {
     prompt("Copia el enlace para compartir:", url);
   }
 }
+window.compartirApp = compartirApp;
 
