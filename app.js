@@ -14,12 +14,13 @@ let isPlaying = false;
 let animationId;
 let deferredPrompt;
 
-// --- NUEVO: control de pausas automáticas y reconexión
-let autoPausedByFocus = false; // pausa por llamada / cambio de app
+// Flags de control
+let autoPausedByFocus = false; // pausa por llamada / otra app con audio
 let forceReload = false;       // reconexión dura tras error de red
-let unlocked = false;          // audio/AudioContext desbloqueado por gesto
+let unlocked = false;          // audio desbloqueado por gesto
+let keepAliveTimer = null;
 
-// --- NUEVO: botón “activar sonido” (usa estilos ya definidos en style.css)
+// --- Botón CTA para desbloquear audio si el navegador lo exige
 let activateBtn = document.getElementById('activateSound');
 if (!activateBtn) {
   activateBtn = document.createElement('button');
@@ -57,7 +58,7 @@ if ('mediaSession' in navigator) {
 }
 
 // =======================
-// SPECTRUM DE BARRAS (sin cambios visuales)
+// ESPECTRO (sin cambios visuales; animación aleatoria)
 // =======================
 const bars = [];
 for (let i = 0; i < 16; i++) {
@@ -72,66 +73,59 @@ function animateSpectrum() {
   if (logo) logo.style.transform = `translateX(-50%) scale(${1 + Math.random() * 0.1})`;
   animationId = requestAnimationFrame(animateSpectrum);
 }
+function startSpectrum() {
+  if (!animationId) animateSpectrum();
+}
+function stopSpectrum() {
+  if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+}
 
 // =======================
 // DESBLOQUEO AUDIO AL PRIMER GESTO (iOS/Android)
 // =======================
+// Nota: no usamos AudioContext para que el audio nativo pueda seguir en background.
 function unlockAudio() {
   if (unlocked) return;
   unlocked = true;
   try {
-    if (!window.audioCtx) {
-      window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const track = window.audioCtx.createMediaElementSource(audio);
-      track.connect(window.audioCtx.destination);
-    } else if (window.audioCtx.state === 'suspended') {
-      window.audioCtx.resume();
-    }
-    // micro reproducción silenciada para satisfacer el gesto en iOS
     const wasMuted = audio.muted;
     audio.muted = true;
     audio.play().then(() => audio.pause()).finally(() => { audio.muted = wasMuted; });
   } catch (e) {}
 }
-// Gesto válido en la mayoría de dispositivos
 ['pointerdown','touchstart','mousedown','keydown'].forEach(evt => {
   document.addEventListener(evt, unlockAudio, { once: true, passive: true });
 });
 
 // =======================
-// REPRODUCCIÓN RADIO (robusta)
+// REPRODUCCIÓN ROBUSTA
 // =======================
-function ensureAudioGraph() {
-  if (!window.audioCtx) {
-    window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const track = window.audioCtx.createMediaElementSource(audio);
-    track.connect(window.audioCtx.destination);
-  }
-  if (window.audioCtx.state === 'suspended') window.audioCtx.resume();
-  if (!audio.dataset.src) audio.dataset.src = audio.src; // guarda src base
+function ensureBaseSrc() {
+  if (!audio.dataset.src) audio.dataset.src = audio.src;
 }
 
 function playRadio(reload = false) {
+  ensureBaseSrc();
   audio.manualPaused = false;
-  ensureAudioGraph();
 
-  // Recarga dura solo cuando venimos de error/fin/interrupción de red
+  // Recarga dura solo en caso necesario
   if (reload || forceReload) {
     const base = audio.dataset.src;
     const sep = base.includes('?') ? '&' : '?';
-    audio.src = `${base}${sep}ts=${Date.now()}`; // rompe caché/proxy del stream
+    audio.src = `${base}${sep}ts=${Date.now()}`; // cache-buster
     forceReload = false;
     audio.load();
   }
 
   return audio.play().then(() => {
-    playPauseBtn.textContent = '⏸';
     isPlaying = true;
-    if (!animationId) animateSpectrum();
+    playPauseBtn && (playPauseBtn.textContent = '⏸');
+    startSpectrum();
+    showActivate(false);
+    startKeepAlive();
   }).catch(err => {
-    // Si el navegador bloquea reproducción (autoplay), pedimos toque del usuario
-    activateBtn.style.display = 'block';
-    console.warn('Reproducción bloqueada. Esperando interacción del usuario.', err);
+    showActivate(true);
+    console.warn('Reproducción bloqueada o fallida hasta interacción del usuario.', err);
     throw err;
   });
 }
@@ -139,78 +133,105 @@ function playRadio(reload = false) {
 function pauseRadio() {
   audio.manualPaused = true;
   audio.pause();
-  playPauseBtn.textContent = '▶';
   isPlaying = false;
-  if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+  playPauseBtn && (playPauseBtn.textContent = '▶');
+  stopSpectrum();
+  stopKeepAlive();
+}
+
+function showActivate(show) {
+  if (!activateBtn) return;
+  activateBtn.style.display = show ? 'block' : 'none';
 }
 
 // =======================
 // BOTÓN PLAY / PAUSE
 // =======================
-playPauseBtn.addEventListener('click', () => {
+playPauseBtn && playPauseBtn.addEventListener('click', () => {
   if (!isPlaying) playRadio().catch(() => {});
   else pauseRadio();
 });
 
 // =======================
-// PAUSAR/REANUDAR POR CAMBIO DE APP / LLAMADA
+// POLÍTICA DE PAUSA/REANUDACIÓN
 // =======================
-function handleHide() {
-  if (!audio.paused && isPlaying) {
+// IMPORTANTE: NO pausar por pantalla apagada o background.
+// Dejamos que el SO gestione el foco de audio.
+// Si el SO nos interrumpe (llamada / otra app), el <audio> emite 'pause'.
+// Marcamos autoPausedByFocus y reanudamos al volver al frente.
+
+audio.addEventListener('pause', () => {
+  // Si no fue el usuario quien pausó, interpretamos que el SO u otra app nos interrumpió.
+  if (isPlaying && !audio.manualPaused) {
     autoPausedByFocus = true;
-    // Pausa sin marcar manual (para poder reanudar sola)
-    audio.pause();
-    playPauseBtn.textContent = '▶';
-    if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+    stopSpectrum(); // detener animación para ahorrar
   }
-}
-function handleShow() {
+});
+
+audio.addEventListener('play', () => {
+  isPlaying = true;
+  playPauseBtn && (playPauseBtn.textContent = '⏸');
+  startSpectrum();
+  startKeepAlive();
+});
+
+// Al volver al frente, si fue pausa por foco, reanudamos.
+function tryAutoResume() {
   if (autoPausedByFocus && !audio.manualPaused) {
     autoPausedByFocus = false;
-    playRadio().catch(() => { activateBtn.style.display = 'block'; });
+    playRadio(false).catch(() => { showActivate(true); });
   }
 }
+window.addEventListener('focus', tryAutoResume);
+window.addEventListener('pageshow', tryAutoResume);
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) handleHide(); else handleShow();
+  if (!document.hidden) tryAutoResume();
 });
-window.addEventListener('pagehide', handleHide);
-window.addEventListener('pageshow', handleShow);
-window.addEventListener('blur', handleHide);
-window.addEventListener('focus', handleShow);
 
 // =======================
-// REINTENTOS INTELIGENTES SI SE DETIENE POR RED
+// REINTENTOS Y RECONECTAR STREAM
 // =======================
-function hardRestart() {
-  if (!audio.manualPaused && isPlaying) {
+function hardRestart(delay = 300) {
+  if (!audio.manualPaused) {
     forceReload = true;
-    setTimeout(() => playRadio(true).catch(() => { activateBtn.style.display = 'block'; }), 400);
+    setTimeout(() => playRadio(true).catch(() => { showActivate(true); }), delay);
   }
 }
-
-// Pausas no manuales en primer plano → reintento suave
-audio.addEventListener('pause', () => {
-  if (isPlaying && !audio.manualPaused) {
-    if (document.hidden || !document.hasFocus()) {
-      autoPausedByFocus = true; // reanudará al volver
-    } else {
-      setTimeout(() => playRadio(false).catch(() => { activateBtn.style.display = 'block'; }), 500);
-    }
-  }
+['stalled','error','ended','abort','waiting'].forEach(evt => {
+  audio.addEventListener(evt, () => hardRestart());
 });
+window.addEventListener('online', () => hardRestart(100));
 
-['stalled','error','ended','abort'].forEach(evt => audio.addEventListener(evt, hardRestart));
-window.addEventListener('online', hardRestart);
+// Reaccionar al cambio de red (Wi-Fi/datos)
+if ('connection' in navigator && navigator.connection && navigator.connection.addEventListener) {
+  navigator.connection.addEventListener('change', () => hardRestart(100));
+}
+
+// Keep-alive: si el reproductor se queda pausado por red en primer plano, reintenta suave
+function startKeepAlive() {
+  stopKeepAlive();
+  keepAliveTimer = setInterval(() => {
+    if (!audio.manualPaused && isPlaying) {
+      // Si estamos visibles y el audio aparece pausado, intenta reproducir
+      if (document.visibilityState === 'visible' && audio.paused) {
+        playRadio(false).catch(()=>{});
+      }
+    }
+  }, 5000);
+}
+function stopKeepAlive() {
+  if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null; }
+}
 
 // =======================
-// INSTALACIÓN ANDROID
-// =======================
+// INSTALACIÓN ANDROID (sin cambios)
+/// ======================
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  installBubble.style.display = 'block';
+  if (installBubble) installBubble.style.display = 'block';
 });
-installBubble.addEventListener('click', async () => {
+installBubble && installBubble.addEventListener('click', async () => {
   installBubble.style.display = 'none';
   if (deferredPrompt) {
     deferredPrompt.prompt();
@@ -220,26 +241,27 @@ installBubble.addEventListener('click', async () => {
 });
 
 // =======================
-// INSTALACIÓN IOS
+// INSTALACIÓN IOS (sin cambios)
 // =======================
 function isIos() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
 function isInStandaloneMode() { return ('standalone' in window.navigator) && window.navigator.standalone; }
 document.addEventListener('DOMContentLoaded', () => {
-  if (isIos() && !isInStandaloneMode() && !localStorage.getItem('iosPromptShown')) {
+  if (iosInstallPrompt && isIos() && !isInStandaloneMode() && !localStorage.getItem('iosPromptShown')) {
     iosInstallPrompt.style.display = 'block';
   }
 });
-closeIosPromptBtn.addEventListener('click', () => {
+closeIosPromptBtn && closeIosPromptBtn.addEventListener('click', () => {
   iosInstallPrompt.style.display = 'none';
   localStorage.setItem('iosPromptShown', 'true');
 });
 
 // =======================
-// SUBVISTAS: ARTISTAS / CLIENTES (sin tocar audio)
+// SUBVISTAS internas (galería/clientes) mantienen audio
 // =======================
 function abrirPagina(pagina){
   const iframeContainer = document.getElementById('iframe-container');
   const iframe = document.getElementById('subpage-frame');
+  if (!iframeContainer || !iframe) return;
   iframe.src = pagina;
   iframeContainer.style.display = 'block';
   document.body.classList.add('subview-open');
@@ -252,6 +274,7 @@ window.abrirPagina = abrirPagina;
 window.cerrarSubview = function (){
   const iframeContainer = document.getElementById('iframe-container');
   const iframe = document.getElementById('subpage-frame');
+  if (!iframeContainer || !iframe) return;
   iframeContainer.style.display = 'none';
   iframe.src = 'about:blank';
   document.body.classList.remove('subview-open');
@@ -270,16 +293,16 @@ window.addEventListener('message', (e) => {
 });
 
 // =======================
-// PELI → debe pausar la radio (se mantiene)
+// Peli → pausar la radio (como antes)
 // =======================
-peliBubble.addEventListener('click', () => {
-  pauseRadio(); // obligatorio
+peliBubble && peliBubble.addEventListener('click', () => {
+  pauseRadio();
   const features = 'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes';
   window.open('peli.html', '_blank', features);
 });
 
 // =======================
-// FUNCIÓN COMPARTIR APP (se mantiene)
+// Compartir (como antes)
 // =======================
 function compartirApp() {
   const url = "https://labuenota.vercel.app/";
