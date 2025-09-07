@@ -1,10 +1,10 @@
 
 /* =========================================
-   app.js — AUDIO ESTABLE (sin microcortes)
-   - Sin recargas agresivas
-   - No pausa por pantalla apagada
+   app.js — AUDIO ESTABLE + Pulso del logo ajustable
+   - Audio estable (sin microcortes, sin pausar por pantalla)
    - Auto-resume tras llamadas/TikTok
    - Reconecta solo cuando es necesario
+   - Pulso visual del #logo mientras suena (NO usa WebAudio)
 ========================================== */
 
 // ====== Referencias (tu DOM existente) ======
@@ -16,7 +16,39 @@ const iosInstallPrompt = document.getElementById('ios-install-prompt');
 const closeIosPromptBtn = document.getElementById('closeIosPromptBtn');
 const peliBubble = document.getElementById('peli-bubble');
 
-// ====== Estado ======
+// ====== Perillas del pulso del logo (AJUSTA AQUÍ si quieres) ======
+const LOGO_BEAT_SPEED = 1.00;     // 0.6 = más lento | 1.0 = normal | 1.5 = más rápido
+const LOGO_BEAT_INTENSITY = 1.00; // 0.6 = suave    | 1.0 = normal | 1.3 = más fuerte
+
+// === Pulso del logo (solo visual; no toca audio) ===
+const logoEl = document.getElementById('logo');
+let logoBeatRAF = null;
+
+function startLogoBeat() {
+  if (!logoEl || logoBeatRAF) return;
+  const startedAt = performance.now();
+  // Frecuencias base escaladas por tu “perilla” de velocidad
+  const base1 = 6.0 * LOGO_BEAT_SPEED;
+  const base2 = 9.7 * LOGO_BEAT_SPEED;
+  const maxScale = 0.06 * LOGO_BEAT_INTENSITY; // 0.06 ≈ +6% de tamaño
+
+  const loop = (t) => {
+    const sec = (t - startedAt) / 1000;
+    const pulse = 0.5 + 0.5 * Math.sin(sec * base1) + 0.15 * Math.sin(sec * base2);
+    const clamped = Math.min(Math.max(pulse, 0), 1);
+    const scale = 1 + clamped * maxScale;
+    logoEl.style.transform = `translateX(-50%) scale(${scale.toFixed(3)})`;
+    logoBeatRAF = requestAnimationFrame(loop);
+  };
+  logoBeatRAF = requestAnimationFrame(loop);
+}
+
+function stopLogoBeat() {
+  if (logoBeatRAF) { cancelAnimationFrame(logoBeatRAF); logoBeatRAF = null; }
+  if (logoEl) logoEl.style.transform = 'translateX(-50%) scale(1)';
+}
+
+// ====== Estado (audio) ======
 let isPlaying = false;        // intención: debería sonar
 let manualPaused = false;     // pausa pedida por el usuario
 let interrupted = false;      // SO/otra app nos interrumpió
@@ -25,9 +57,7 @@ let startInProgress = false;  // evita dobles arranques
 let baseSrc = (audio && (audio.getAttribute('src') || audio.src)) || '';
 
 if (audio) {
-  // Preload automático: ayuda a evitar cortes en algunos dispositivos
   audio.preload = 'auto';
-  // Garantiza inline en iPhone
   audio.setAttribute('playsinline','');
   audio.setAttribute('webkit-playsinline','');
 }
@@ -78,16 +108,14 @@ async function startPlayback({ forceReload = false } = {}){
   if (forceReload) hardReload();
 
   try {
-    // En iOS viejos, cargar antes mejora
     if (audio.readyState < 1) audio.load();
-
     await audio.play();
     isPlaying = true;
     interrupted = false;
     playPauseBtn && (playPauseBtn.textContent = '⏸');
     startSpectrum();
+    startLogoBeat(); // 🔹 activa pulso al iniciar
   } catch (e) {
-    // Fallback iOS viejos: desbloqueo breve y reintento
     try {
       const was = audio.muted; audio.muted = true;
       await audio.play();
@@ -98,11 +126,12 @@ async function startPlayback({ forceReload = false } = {}){
       interrupted = false;
       playPauseBtn && (playPauseBtn.textContent = '⏸');
       startSpectrum();
+      startLogoBeat(); // 🔹 también en el fallback
     } catch (e2) {
-      // Sin burbujas: el usuario puede volver a tocar Play
       console.warn('Se requiere interacción del usuario para reproducir.', e2);
       isPlaying = false;
       stopSpectrum();
+      stopLogoBeat();
     }
   } finally {
     startInProgress = false;
@@ -115,41 +144,41 @@ function pausePlayback(){
   audio.pause();
   isPlaying = false;
   playPauseBtn && (playPauseBtn.textContent = '▶');
+  stopLogoBeat();  // 🔹 detener pulso al pausar
   stopSpectrum();
 }
 
-// ====== Eventos nativos del <audio> ======
+// ====== Eventos del <audio> ======
 audio.addEventListener('playing', () => {
   isPlaying = true;
   playPauseBtn && (playPauseBtn.textContent = '⏸');
   startSpectrum();
+  startLogoBeat(); // 🔹 asegurar pulso si el evento llega primero
 });
 
 audio.addEventListener('pause', () => {
-  // Evita interpretar como interrupción una pausa inmediata tras Play
   const justStarted = (Date.now() - lastUserPlayAt) < 1200;
   if (!manualPaused && !justStarted) interrupted = true;
-  if (manualPaused || !isPlaying) stopSpectrum();
+  if (manualPaused || !isPlaying) {
+    stopSpectrum();
+    stopLogoBeat(); // 🔹 detener pulso si se pausa
+  }
 });
 
 // IMPORTANTÍSIMO: NO recargar el stream por 'waiting'/'suspend' (causa microcortes).
-// Solo actuamos en errores reales.
 audio.addEventListener('error', () => {
-  // error real → recarga dura y reintenta
   setTimeout(() => startPlayback({ forceReload: true }), 400);
 });
 audio.addEventListener('stalled', () => {
-  // intenta continuar SIN recargar (así evitamos el corte)
   if (!manualPaused) {
     setTimeout(() => { if (audio.paused) startPlayback().catch(()=>{}); }, 600);
   }
 });
 audio.addEventListener('ended', () => {
-  // algunos streams pueden emitir ended; tratamos como reconexión suave
   if (!manualPaused) setTimeout(() => startPlayback({ forceReload: true }), 600);
 });
 
-// ====== Auto-resume al volver a la app (solo si nos interrumpieron) ======
+// ====== Auto-resume al volver a la app ======
 function tryAutoResume(){
   if (interrupted && !manualPaused){
     interrupted = false;
@@ -161,7 +190,6 @@ window.addEventListener('pageshow', tryAutoResume);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) tryAutoResume(); });
 
 // ====== Cambio de red / volver online (conservador) ======
-// NO recargamos si está sonando bien (para no cortar). Solo si está pausado o hubo error.
 window.addEventListener('online', () => {
   if (audio.paused && !manualPaused) startPlayback({ forceReload: true });
 });
