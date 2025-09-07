@@ -1,7 +1,13 @@
 
-// =======================
-// ELEMENTOS PRINCIPALES
-// =======================
+/* =========================================
+   app.js — AUDIO ESTABLE (sin microcortes)
+   - Sin recargas agresivas
+   - No pausa por pantalla apagada
+   - Auto-resume tras llamadas/TikTok
+   - Reconecta solo cuando es necesario
+========================================== */
+
+// ====== Referencias (tu DOM existente) ======
 const audio = document.getElementById('audio');
 const playPauseBtn = document.getElementById('playPauseBtn');
 const spectrum = document.getElementById('spectrum');
@@ -10,272 +16,238 @@ const iosInstallPrompt = document.getElementById('ios-install-prompt');
 const closeIosPromptBtn = document.getElementById('closeIosPromptBtn');
 const peliBubble = document.getElementById('peli-bubble');
 
-// Estado
-let isPlaying = false;
-let manualPaused = false;       // true solo cuando el usuario pulsa "pausa"
-let autoInterrupted = false;    // true si el SO u otra app nos interrumpió
-let lastPlayClick = 0;          // para evitar “play→pause” inmediato falso
-let animationId = null;
-let deferredPrompt = null;
-let keepAliveTimer = null;
+// ====== Estado ======
+let isPlaying = false;        // intención: debería sonar
+let manualPaused = false;     // pausa pedida por el usuario
+let interrupted = false;      // SO/otra app nos interrumpió
+let lastUserPlayAt = 0;       // para ignorar "pausa fantasma"
+let startInProgress = false;  // evita dobles arranques
+let baseSrc = (audio && (audio.getAttribute('src') || audio.src)) || '';
 
-// =======================
-// ESPECTRO (sin tocar estilos / DOM)
-// =======================
+if (audio) {
+  // Preload automático: ayuda a evitar cortes en algunos dispositivos
+  audio.preload = 'auto';
+  // Garantiza inline en iPhone
+  audio.setAttribute('playsinline','');
+  audio.setAttribute('webkit-playsinline','');
+}
+
+// ====== ESPECTRO (sin tocar tu CSS/HTML) ======
 const bars = [];
-for (let i = 0; i < 16; i++) {
-  const bar = document.createElement('div');
-  bar.className = 'bar';
-  spectrum.appendChild(bar);
-  bars.push(bar);
-}
-function animateSpectrum() {
-  bars.forEach(bar => bar.style.height = `${Math.random() * 100}%`);
-  animationId = requestAnimationFrame(animateSpectrum);
-}
-function startSpectrum() {
-  if (!animationId) animateSpectrum();
-}
-function stopSpectrum() {
-  if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-}
-
-// =======================
-// MEDIA SESSION
-// =======================
-if ('mediaSession' in navigator) {
-  navigator.mediaSession.metadata = new MediaMetadata({
-    title: 'LA BUENOTA RADIO ONLINE',
-    artist: 'Ivibra',
-    album: 'Radio Online',
-    artwork: [
-      { src: 'ivibra.webp', sizes: '96x96', type: 'image/webp' },
-      { src: 'ivibra.webp', sizes: '128x128', type: 'image/webp' },
-      { src: 'ivibra.webp', sizes: '192x192', type: 'image/webp' },
-      { src: 'ivibra.webp', sizes: '256x256', type: 'image/webp' },
-      { src: 'ivibra.webp', sizes: '384x384', type: 'image/webp' },
-      { src: 'ivibra.webp', sizes: '512x512', type: 'image/webp' }
-    ]
-  });
-  navigator.mediaSession.setActionHandler('play', () => playRadio().catch(()=>{}));
-  navigator.mediaSession.setActionHandler('pause', () => pauseRadio());
-}
-
-// =======================
-// UTILIDADES AUDIO
-// =======================
-function ensureBaseSrc() {
-  if (!audio.dataset.src) audio.dataset.src = audio.src;
-}
-function cacheBustedSrc() {
-  const base = audio.dataset.src || audio.src;
-  const sep = base.includes('?') ? '&' : '?';
-  return `${base}${sep}ts=${Date.now()}`;
-}
-
-// Reproducción robusta sin burbujas extras
-async function playRadio(reload = false) {
-  ensureBaseSrc();
-  manualPaused = false;
-  lastPlayClick = Date.now();
-
-  if (reload) {
-    audio.src = cacheBustedSrc();
-    audio.load();
+if (spectrum) {
+  for (let i = 0; i < 16; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    spectrum.appendChild(bar);
+    bars.push(bar);
   }
+}
+let animId = null;
+function animateSpectrum() {
+  for (const b of bars) b.style.height = (Math.random() * 100) + '%';
+  animId = requestAnimationFrame(animateSpectrum);
+}
+function startSpectrum(){ if (!animId && bars.length) animateSpectrum(); }
+function stopSpectrum(){ if (animId){ cancelAnimationFrame(animId); animId = null; } }
+
+// ====== Utilidades ======
+function ensureBaseSrc(){
+  if (!baseSrc) baseSrc = audio.getAttribute('src') || audio.src || '';
+}
+function cacheBusted(){
+  ensureBaseSrc();
+  const sep = baseSrc.includes('?') ? '&' : '?';
+  return `${baseSrc}${sep}ts=${Date.now()}`;
+}
+function hardReload(){
+  // Recarga DURA solo cuando realmente hay error/fin de datos
+  ensureBaseSrc();
+  if (!baseSrc) return;
+  audio.pause();
+  audio.src = cacheBusted();
+  audio.load();
+}
+
+// ====== Play / Pause (sin trucos agresivos) ======
+async function startPlayback({ forceReload = false } = {}){
+  if (!audio || startInProgress) return;
+  startInProgress = true;
+  manualPaused = false;
+  lastUserPlayAt = Date.now();
+
+  if (forceReload) hardReload();
 
   try {
-    await audio.play(); // esperamos a que realmente inicie
+    // En iOS viejos, cargar antes mejora
+    if (audio.readyState < 1) audio.load();
+
+    await audio.play();
     isPlaying = true;
-    autoInterrupted = false;
+    interrupted = false;
     playPauseBtn && (playPauseBtn.textContent = '⏸');
     startSpectrum();
-    startKeepAlive();
-  } catch (err) {
-    // Si el navegador no deja (p. ej. sin gesto), no mostramos nada: el usuario puede tocar Play.
-    console.warn('Bloqueado hasta interacción del usuario (silencioso):', err);
-    isPlaying = false;
-    stopSpectrum();
-    stopKeepAlive();
-    throw err;
+  } catch (e) {
+    // Fallback iOS viejos: desbloqueo breve y reintento
+    try {
+      const was = audio.muted; audio.muted = true;
+      await audio.play();
+      await new Promise(r=>setTimeout(r,50));
+      audio.muted = was;
+      if (audio.paused) await audio.play();
+      isPlaying = true;
+      interrupted = false;
+      playPauseBtn && (playPauseBtn.textContent = '⏸');
+      startSpectrum();
+    } catch (e2) {
+      // Sin burbujas: el usuario puede volver a tocar Play
+      console.warn('Se requiere interacción del usuario para reproducir.', e2);
+      isPlaying = false;
+      stopSpectrum();
+    }
+  } finally {
+    startInProgress = false;
   }
 }
 
-function pauseRadio() {
+function pausePlayback(){
+  if (!audio) return;
   manualPaused = true;
   audio.pause();
   isPlaying = false;
   playPauseBtn && (playPauseBtn.textContent = '▶');
   stopSpectrum();
-  stopKeepAlive();
 }
 
-// =======================
-// EVENTOS <audio> — estados reales
-// =======================
+// ====== Eventos nativos del <audio> ======
 audio.addEventListener('playing', () => {
   isPlaying = true;
   playPauseBtn && (playPauseBtn.textContent = '⏸');
   startSpectrum();
-  startKeepAlive();
 });
+
 audio.addEventListener('pause', () => {
-  // Ignorar “pausa fantasma” dentro de 1200ms tras pulsar play (evita el bug de doble toque)
-  const justStarted = (Date.now() - lastPlayClick) < 1200;
-  if (!manualPaused && !justStarted) {
-    // interpretamos interrupción del sistema u otra app
-    autoInterrupted = true;
-  }
-  if (manualPaused || !isPlaying) {
-    stopSpectrum();
-    stopKeepAlive();
-  }
+  // Evita interpretar como interrupción una pausa inmediata tras Play
+  const justStarted = (Date.now() - lastUserPlayAt) < 1200;
+  if (!manualPaused && !justStarted) interrupted = true;
+  if (manualPaused || !isPlaying) stopSpectrum();
 });
 
-// Reconectar rápido si el stream se congela
-['stalled','error','ended','abort','waiting'].forEach(evt => {
-  audio.addEventListener(evt, () => hardRestart());
+// IMPORTANTÍSIMO: NO recargar el stream por 'waiting'/'suspend' (causa microcortes).
+// Solo actuamos en errores reales.
+audio.addEventListener('error', () => {
+  // error real → recarga dura y reintenta
+  setTimeout(() => startPlayback({ forceReload: true }), 400);
+});
+audio.addEventListener('stalled', () => {
+  // intenta continuar SIN recargar (así evitamos el corte)
+  if (!manualPaused) {
+    setTimeout(() => { if (audio.paused) startPlayback().catch(()=>{}); }, 600);
+  }
+});
+audio.addEventListener('ended', () => {
+  // algunos streams pueden emitir ended; tratamos como reconexión suave
+  if (!manualPaused) setTimeout(() => startPlayback({ forceReload: true }), 600);
 });
 
-// =======================
-// AUTO-RESUME tras llamada/TikTok/volver a la app
-// =======================
-function tryAutoResume() {
-  if (autoInterrupted && !manualPaused) {
-    playRadio(false).catch(()=>{ /* sin burbujas */ });
+// ====== Auto-resume al volver a la app (solo si nos interrumpieron) ======
+function tryAutoResume(){
+  if (interrupted && !manualPaused){
+    interrupted = false;
+    if (audio.paused) startPlayback().catch(()=>{});
   }
 }
 window.addEventListener('focus', tryAutoResume);
 window.addEventListener('pageshow', tryAutoResume);
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) tryAutoResume();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) tryAutoResume(); });
+
+// ====== Cambio de red / volver online (conservador) ======
+// NO recargamos si está sonando bien (para no cortar). Solo si está pausado o hubo error.
+window.addEventListener('online', () => {
+  if (audio.paused && !manualPaused) startPlayback({ forceReload: true });
 });
-
-// Importante: NO pausar por pantalla apagada / background.
-// (No añadimos listeners de pause por visibility/blur/pagehide)
-
-// =======================
-// REINTENTOS Y CAMBIO DE RED
-// =======================
-function hardRestart(delay = 250) {
-  if (!manualPaused) {
-    setTimeout(() => playRadio(true).catch(()=>{}), delay);
-  }
-}
-window.addEventListener('online', () => hardRestart(120));
-if ('connection' in navigator && navigator.connection?.addEventListener) {
-  navigator.connection.addEventListener('change', () => hardRestart(120));
+if (navigator.connection?.addEventListener){
+  navigator.connection.addEventListener('change', () => {
+    if (audio.paused && !manualPaused) startPlayback({ forceReload: true });
+  });
 }
 
-// Keep-alive suave: si en primer plano el audio queda pausado por red, intenta reproducir
-function startKeepAlive() {
-  stopKeepAlive();
-  keepAliveTimer = setInterval(() => {
-    if (!manualPaused && document.visibilityState === 'visible') {
-      if (audio.paused) playRadio(false).catch(()=>{});
-    }
-  }, 5000);
-}
-function stopKeepAlive() {
-  if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null; }
-}
-
-// =======================
-// BOTÓN PLAY/PAUSE
-// =======================
+// ====== Botón Play / Pause (tu UI) ======
 playPauseBtn && playPauseBtn.addEventListener('click', () => {
-  if (!isPlaying) playRadio().catch(()=>{});
-  else pauseRadio();
+  if (!isPlaying) startPlayback();
+  else pausePlayback();
 });
 
-// =======================
-// INSTALACIÓN ANDROID (igual)
-// =======================
+// ====== Instalación Android (igual) ======
+let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  if (installBubble) installBubble.style.display = 'block';
+  installBubble && (installBubble.style.display = 'block');
 });
-installBubble && installBubble.addEventListener('click', async () => {
+installBubble?.addEventListener('click', async () => {
   installBubble.style.display = 'none';
-  if (deferredPrompt) {
+  if (deferredPrompt){
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
     deferredPrompt = null;
   }
 });
 
-// =======================
-// INSTALACIÓN IOS (igual)
-// =======================
-function isIos() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
-function isInStandaloneMode() { return ('standalone' in window.navigator) && window.navigator.standalone; }
+// ====== Instalación iOS (igual) ======
+function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+function isStandalone(){ return ('standalone' in navigator) && navigator.standalone; }
 document.addEventListener('DOMContentLoaded', () => {
-  if (iosInstallPrompt && isIos() && !isInStandaloneMode() && !localStorage.getItem('iosPromptShown')) {
+  if (iosInstallPrompt && isIos() && !isStandalone() && !localStorage.getItem('iosPromptShown')){
     iosInstallPrompt.style.display = 'block';
   }
 });
-closeIosPromptBtn && closeIosPromptBtn.addEventListener('click', () => {
+closeIosPromptBtn?.addEventListener('click', () => {
   iosInstallPrompt.style.display = 'none';
   localStorage.setItem('iosPromptShown', 'true');
 });
 
-// =======================
-// SUBVISTAS internas (mantienen audio)
-// =======================
+// ====== Subvistas (mantienen audio, como antes) ======
 function abrirPagina(pagina){
-  const iframeContainer = document.getElementById('iframe-container');
-  const iframe = document.getElementById('subpage-frame');
-  if (!iframeContainer || !iframe) return;
-  iframe.src = pagina;
-  iframeContainer.style.display = 'block';
+  const c = document.getElementById('iframe-container');
+  const f = document.getElementById('subpage-frame');
+  if (!c || !f) return;
+  f.src = pagina;
+  c.style.display = 'block';
   document.body.classList.add('subview-open');
-  if (!history.state || !history.state.subview) {
-    history.pushState({ subview: true }, '');
-  }
+  if (!history.state || !history.state.subview) history.pushState({ subview:true }, '');
 }
 window.abrirPagina = abrirPagina;
-window.cerrarSubview = function (){
-  const iframeContainer = document.getElementById('iframe-container');
-  const iframe = document.getElementById('subpage-frame');
-  if (!iframeContainer || !iframe) return;
-  iframeContainer.style.display = 'none';
-  iframe.src = 'about:blank';
+
+window.cerrarSubview = function(){
+  const c = document.getElementById('iframe-container');
+  const f = document.getElementById('subpage-frame');
+  if (!c || !f) return;
+  c.style.display = 'none';
+  f.src = 'about:blank';
   document.body.classList.remove('subview-open');
   if (history.state && history.state.subview) history.back();
 };
 window.addEventListener('popstate', () => {
-  const iframeContainer = document.getElementById('iframe-container');
-  if (iframeContainer && iframeContainer.style.display === 'block') {
-    window.cerrarSubview();
-  }
+  const c = document.getElementById('iframe-container');
+  if (c && c.style.display === 'block') window.cerrarSubview();
 });
 window.addEventListener('message', (e) => {
-  if (e?.data?.type === 'close-subview') {
-    if (typeof window.cerrarSubview === 'function') window.cerrarSubview();
-  }
+  if (e?.data?.type === 'close-subview') window.cerrarSubview?.();
 });
 
-// =======================
-// Peli → pausar la radio (sin cambios)
-// =======================
-peliBubble && peliBubble.addEventListener('click', () => {
-  pauseRadio();
+// ====== Peli (pausa radio, como lo tienes) ======
+peliBubble?.addEventListener('click', () => {
+  pausePlayback();
   const features = 'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes';
   window.open('peli.html', '_blank', features);
 });
 
-// =======================
-// Compartir (igual)
-// =======================
-function compartirApp() {
+// ====== Compartir (igual) ======
+function compartirApp(){
   const url = "https://labuenota.vercel.app/";
   const text = "¡Descarga la app de La Buenota Radio Online, se puede ver películas Gratis y tiene buena música!";
-  if (navigator.share) {
-    navigator.share({ title: "La Buenota Radio Online", text, url }).catch(console.error);
-  } else {
-    prompt("Copia el enlace para compartir:", url);
-  }
+  if (navigator.share) navigator.share({ title: "La Buenota Radio Online", text, url }).catch(console.error);
+  else prompt("Copia el enlace para compartir:", url);
 }
 window.compartirApp = compartirApp;
 
