@@ -183,17 +183,37 @@ playPauseBtn && playPauseBtn.addEventListener('click', () => {
   else pausePlayback();
 });
 
-// ====== Instalación Android (compatibilidad total) ======
+// ====== Instalación Android (Samsung + Chrome + Firefox + etc.) ======
 let deferredPrompt = null;
+
+// Detectar si estamos en modo standalone
+function isStandaloneAndroid() {
+  return window.matchMedia('(display-mode: standalone)').matches;
+}
+
+// Verificar instalación real con API
+async function checkIfInstalled() {
+  if ('getInstalledRelatedApps' in navigator) {
+    const related = await navigator.getInstalledRelatedApps();
+    if (related && related.length > 0) return true;
+  }
+  return false;
+}
+
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  if (!window.matchMedia('(display-mode: standalone)').matches) {
+  if (!isStandaloneAndroid()) {
     installBubble && (installBubble.style.display = 'block');
   }
 });
 
 installBubble?.addEventListener('click', async () => {
+  if (isStandaloneAndroid() || localStorage.getItem('pwaInstalled') === 'true' || await checkIfInstalled()) {
+    installBubble.style.display = 'none';
+    return;
+  }
+
   if (deferredPrompt) {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
@@ -203,14 +223,13 @@ installBubble?.addEventListener('click', async () => {
       localStorage.setItem('pwaInstalled', 'true');
     }
   } else {
-    // Detectar navegador y dar instrucciones
     const ua = navigator.userAgent.toLowerCase();
     let msg = "Abre el menú ⋮ del navegador y toca 'Añadir a pantalla principal'.";
 
     if (ua.includes("firefox")) {
       msg = "En Firefox Android: menú ⋮ → 'Instalar' o 'Añadir a pantalla principal'.";
     } else if (ua.includes("samsungbrowser")) {
-      msg = "En Samsung Internet: menú ☰ → 'Agregar a pantalla principal'.";
+      msg = "En Samsung Internet: menú ☰ → 'Agregar a pantalla principal'.\n\n⚠️ Si ves el mensaje 'pantalla principal bloqueada', abre Ajustes → Pantalla de inicio y desbloquéalo, o usa Google Chrome para instalar sin problema.";
     } else if (ua.includes("opr/") || ua.includes("opera")) {
       msg = "En Opera: menú O → 'Instalar app' o 'Agregar a pantalla principal'.";
     } else if (ua.includes("miui") || ua.includes("xiaomi")) {
@@ -223,9 +242,12 @@ installBubble?.addEventListener('click', async () => {
   }
 });
 
-if (window.matchMedia('(display-mode: standalone)').matches || localStorage.getItem('pwaInstalled')) {
-  installBubble && (installBubble.style.display = 'none');
-}
+// Ocultar burbuja si ya está instalada al cargar
+(async () => {
+  if (isStandaloneAndroid() || localStorage.getItem('pwaInstalled') === 'true' || await checkIfInstalled()) {
+    installBubble && (installBubble.style.display = 'none');
+  }
+})();
 
 // ====== Instalación iOS ======
 function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
