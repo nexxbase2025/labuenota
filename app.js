@@ -121,30 +121,37 @@ playPauseBtn && playPauseBtn.addEventListener('click', () => { if (!isPlaying) s
 let deferredPrompt = null;
 
 function isStandaloneAndroid(){ return window.matchMedia('(display-mode: standalone)').matches; }
-async function checkIfInstalled(){ if ('getInstalledRelatedApps' in navigator){ const related = await navigator.getInstalledRelatedApps(); if (related && related.length > 0) return true; } return false; }
+async function checkIfInstalled(){ 
+  if ('getInstalledRelatedApps' in navigator){ 
+    const related = await navigator.getInstalledRelatedApps(); 
+    if (related && related.length > 0) return true; 
+  } 
+  return false; 
+}
 
-async function updateInstallBubble() {
+async function hideIfInstalled() {
   if (isStandaloneAndroid() || localStorage.getItem('pwaInstalled') === 'true' || await checkIfInstalled()) {
     installBubble && (installBubble.style.display = 'none');
-  } else {
-    installBubble && (installBubble.style.display = 'block');
+    return true;
   }
+  return false;
 }
-updateInstallBubble();
+hideIfInstalled();
 
+// Caso navegadores que SÍ soportan beforeinstallprompt
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  updateInstallBubble();
+  hideIfInstalled().then(installed => {
+    if (!installed) installBubble && (installBubble.style.display = 'block');
+  });
 });
 
 installBubble?.addEventListener('click', async () => {
-  if (isStandaloneAndroid() || localStorage.getItem('pwaInstalled') === 'true' || await checkIfInstalled()) {
-    installBubble.style.display = 'none'; return;
-  }
+  if (await hideIfInstalled()) return;
 
   if (deferredPrompt) {
-    // 👉 Chrome/Brave/Edge: usar prompt oficial
+    // 👉 Chrome/Brave/Edge: usar prompt nativo
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     deferredPrompt = null;
@@ -153,7 +160,7 @@ installBubble?.addEventListener('click', async () => {
       installBubble.style.display = 'none';
     }
   } else {
-    // 👉 Solo navegadores sin soporte muestran instrucciones
+    // 👉 Samsung Internet, Firefox, Opera, Xiaomi: instrucciones
     const ua = navigator.userAgent.toLowerCase();
     let msg = null;
     if (ua.includes("firefox")) msg = "En Firefox Android: menú ⋮ → 'Instalar' o 'Añadir a pantalla principal'.";
