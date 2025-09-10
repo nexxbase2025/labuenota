@@ -48,11 +48,9 @@
     font-size: clamp(12px,2vw,16px);
     color: #000;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    gap: 0;
     text-align: center;
   }
 
-  /* Overlay del iframe (pantalla limpia) */
   #iframe-container {
     display:none;
     position:fixed;
@@ -112,11 +110,10 @@
 
 <div id="install-bubble">📲 Instalar app</div>
 <div id="ios-install-prompt">
-  📲 Para instalar esta app en iPhone, pulsa <strong>Compartir</strong> → <strong>Y luego Añadir a pantalla de inicio</strong>.
+  📲 Para instalar esta app en iPhone, pulsa <strong>Compartir</strong> → <strong>Añadir a pantalla de inicio</strong>.
   <br /><button id="closeIosPromptBtn">Cerrar</button>
 </div>
 
-<!-- Contenedor iframe para subpáginas -->
 <div id="iframe-container">
   <iframe id="subpage-frame"></iframe>
   <button id="close-frame-btn">⬅ Volver</button>
@@ -128,14 +125,14 @@
     navigator.serviceWorker.register('service-worker.js');
   }
 
-  // Fallback: si no llega beforeinstallprompt
+  // Fallback si no llega beforeinstallprompt
   window.addEventListener('load', () => {
     setTimeout(() => {
       const bubble = document.getElementById('install-bubble');
       if (bubble && bubble.style.display === 'none') {
         bubble.style.display = 'block';
         bubble.onclick = () => {
-          alert("Para instalar esta app: abre el menú ⋮ del navegador y toca 'Añadir a pantalla principal'.");
+          alert("Para instalar esta app: abre el menú del navegador y toca 'Añadir a pantalla principal'.");
         };
       }
     }, 5000);
