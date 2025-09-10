@@ -64,7 +64,11 @@
   #iframe-container iframe {
     width:100%; height:100%; border:none;
   }
+  /* Botón interno opcional (lo dejamos oculto para que no haya "nada extra") */
   #close-frame-btn { display:none; }
+
+  /* Mientras la subvista está abierta, ocultar toda la UI del index,
+     pero el <audio> sigue vivo y sonando */
   .subview-open > *:not(#iframe-container) { visibility: hidden !important; }
 </style>
 </head>
@@ -74,16 +78,16 @@
 
 <div id="top-bar">
   <button class="bubble" onclick="abrirPagina('artistas.html')">
-    <span>Nuestros</span>
-    <span>Artistas</span>
+    <span style="display:block;">Nuestros</span>
+    <span style="display:block;">Artistas</span>
   </button>
   <button class="bubble" onclick="abrirPagina('clientes.html')">
-    <span>Nuestros</span>
-    <span>Clientes</span>
+    <span style="display:block;">Nuestros</span>
+    <span style="display:block;">Clientes</span>
   </button>
   <button class="bubble" onclick="compartirApp()">
-    <span>Compartir</span>
-    <span>App</span>
+    <span style="display:block;">Compartir</span>
+    <span style="display:block;">App</span>
   </button>
 </div>
 
@@ -124,9 +128,12 @@
 
 <script src="app.js"></script>
 <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js');
-  }
+function compartirApp(){
+  const url = "https://labuenota.vercel.app/";
+  const text = "¡Descarga la app de La Buenota Radio Online, se puede ver peliculas Gratis y tiene buena musica!";
+  if(navigator.share){ navigator.share({title:"La Buenota Radio Online", text, url}).catch(console.error); }
+  else { alert("Comparte el enlace: " + url); }
+}
 </script>
 </body>
 </html>
