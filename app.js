@@ -117,7 +117,7 @@ if (navigator.connection?.addEventListener){ navigator.connection.addEventListen
 
 playPauseBtn && playPauseBtn.addEventListener('click', () => { if (!isPlaying) startPlayback(); else pausePlayback(); });
 
-/* === Instalación Android (definitiva) === */
+/* === Instalación Android (definitiva, con prompt real en Chrome) === */
 let deferredPrompt = null;
 
 function isStandaloneAndroid(){ return window.matchMedia('(display-mode: standalone)').matches; }
@@ -138,27 +138,29 @@ async function hideIfInstalled() {
 }
 hideIfInstalled();
 
-// Caso navegadores que SÍ soportan beforeinstallprompt
+// Guardar el evento para Chrome/Brave/Edge
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
+
   hideIfInstalled().then(installed => {
     if (!installed) installBubble && (installBubble.style.display = 'block');
   });
 });
 
+// Click en la burbuja
 installBubble?.addEventListener('click', async () => {
   if (await hideIfInstalled()) return;
 
   if (deferredPrompt) {
-    // 👉 Chrome/Brave/Edge: usar prompt nativo
+    // 👉 Chrome/Brave/Edge usan prompt oficial
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    deferredPrompt = null;
     if (outcome === 'accepted') {
       localStorage.setItem('pwaInstalled', 'true');
       installBubble.style.display = 'none';
     }
+    deferredPrompt = null;
   } else {
     // 👉 Samsung Internet, Firefox, Opera, Xiaomi: instrucciones
     const ua = navigator.userAgent.toLowerCase();
@@ -222,4 +224,3 @@ function compartirApp(){
   else prompt("Copia el enlace para compartir:", url);
 }
 window.compartirApp = compartirApp;
-
