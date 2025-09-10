@@ -117,20 +117,23 @@ if (navigator.connection?.addEventListener){ navigator.connection.addEventListen
 
 playPauseBtn && playPauseBtn.addEventListener('click', () => { if (!isPlaying) startPlayback(); else pausePlayback(); });
 
-/* === Instalación Android (definitiva, con prompt real en Chrome) === */
+/* === Instalación PWA definitiva === */
 let deferredPrompt = null;
 
-function isStandaloneAndroid(){ return window.matchMedia('(display-mode: standalone)').matches; }
-async function checkIfInstalled(){ 
-  if ('getInstalledRelatedApps' in navigator){ 
-    const related = await navigator.getInstalledRelatedApps(); 
-    if (related && related.length > 0) return true; 
-  } 
-  return false; 
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+async function checkIfInstalled(){
+  if ('getInstalledRelatedApps' in navigator){
+    const related = await navigator.getInstalledRelatedApps();
+    if (related && related.length > 0) return true;
+  }
+  return false;
 }
 
 async function hideIfInstalled() {
-  if (isStandaloneAndroid() || localStorage.getItem('pwaInstalled') === 'true' || await checkIfInstalled()) {
+  if (isStandalone() || localStorage.getItem('pwaInstalled') === 'true' || await checkIfInstalled()) {
     installBubble && (installBubble.style.display = 'none');
     return true;
   }
@@ -142,10 +145,17 @@ hideIfInstalled();
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-
   hideIfInstalled().then(installed => {
-    if (!installed) installBubble && (installBubble.style.display = 'block');
+    if (!installed) {
+      installBubble && (installBubble.style.display = 'block');
+    }
   });
+});
+
+// Escuchar cuando realmente se instala (Chrome lo dispara)
+window.addEventListener('appinstalled', () => {
+  localStorage.setItem('pwaInstalled', 'true');
+  installBubble && (installBubble.style.display = 'none');
 });
 
 // Click en la burbuja
@@ -176,9 +186,9 @@ installBubble?.addEventListener('click', async () => {
 
 /* === Instalación iOS === */
 function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
-function isStandalone(){ return ('standalone' in navigator) && navigator.standalone; }
+function isStandaloneIos(){ return ('standalone' in navigator) && navigator.standalone; }
 document.addEventListener('DOMContentLoaded', () => {
-  if (iosInstallPrompt && isIos() && !isStandalone() && !localStorage.getItem('iosPromptShown')){
+  if (iosInstallPrompt && isIos() && !isStandaloneIos() && !localStorage.getItem('iosPromptShown')){
     iosInstallPrompt.style.display = 'block';
   }
 });
