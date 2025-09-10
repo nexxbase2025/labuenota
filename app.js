@@ -17,6 +17,7 @@ const LOGO_BEAT_INTENSITY = 1.00;
 const logoEl = document.getElementById('logo');
 let logoBeatRAF = null;
 
+/* === Animación Logo === */
 function startLogoBeat() {
   if (!logoEl || logoBeatRAF) return;
   const startedAt = performance.now();
@@ -39,6 +40,7 @@ function stopLogoBeat() {
   if (logoEl) logoEl.style.transform = 'translateX(-50%) scale(1)';
 }
 
+/* === Audio === */
 let isPlaying = false;
 let manualPaused = false;
 let interrupted = false;
@@ -52,6 +54,7 @@ if (audio) {
   audio.setAttribute('webkit-playsinline','');
 }
 
+/* Spectrum */
 const bars = [];
 if (spectrum) {
   for (let i = 0; i < 16; i++) {
@@ -69,21 +72,9 @@ function animateSpectrum() {
 function startSpectrum(){ if (!animId && bars.length) animateSpectrum(); }
 function stopSpectrum(){ if (animId){ cancelAnimationFrame(animId); animId = null; } }
 
-function ensureBaseSrc(){
-  if (!baseSrc) baseSrc = audio.getAttribute('src') || audio.src || '';
-}
-function cacheBusted(){
-  ensureBaseSrc();
-  const sep = baseSrc.includes('?') ? '&' : '?';
-  return `${baseSrc}${sep}ts=${Date.now()}`;
-}
-function hardReload(){
-  ensureBaseSrc();
-  if (!baseSrc) return;
-  audio.pause();
-  audio.src = cacheBusted();
-  audio.load();
-}
+function ensureBaseSrc(){ if (!baseSrc) baseSrc = audio.getAttribute('src') || audio.src || ''; }
+function cacheBusted(){ ensureBaseSrc(); const sep = baseSrc.includes('?') ? '&' : '?'; return `${baseSrc}${sep}ts=${Date.now()}`; }
+function hardReload(){ ensureBaseSrc(); if (!baseSrc) return; audio.pause(); audio.src = cacheBusted(); audio.load(); }
 
 async function startPlayback({ forceReload = false } = {}){
   if (!audio || startInProgress) return;
@@ -91,165 +82,88 @@ async function startPlayback({ forceReload = false } = {}){
   manualPaused = false;
   lastUserPlayAt = Date.now();
   if (forceReload) hardReload();
-
   try {
     if (audio.readyState < 1) audio.load();
     await audio.play();
-    isPlaying = true;
-    interrupted = false;
+    isPlaying = true; interrupted = false;
     playPauseBtn && (playPauseBtn.textContent = '⏸');
-    startSpectrum();
-    startLogoBeat();
+    startSpectrum(); startLogoBeat();
   } catch (e) {
     try {
       const was = audio.muted; audio.muted = true;
-      await audio.play();
-      await new Promise(r=>setTimeout(r,50));
-      audio.muted = was;
-      if (audio.paused) await audio.play();
-      isPlaying = true;
-      interrupted = false;
+      await audio.play(); await new Promise(r=>setTimeout(r,50));
+      audio.muted = was; if (audio.paused) await audio.play();
+      isPlaying = true; interrupted = false;
       playPauseBtn && (playPauseBtn.textContent = '⏸');
-      startSpectrum();
-      startLogoBeat();
-    } catch (e2) {
-      console.warn('Se requiere interacción del usuario para reproducir.', e2);
-      isPlaying = false;
-      stopSpectrum();
-      stopLogoBeat();
-    }
-  } finally {
-    startInProgress = false;
-  }
+      startSpectrum(); startLogoBeat();
+    } catch { console.warn("Se requiere interacción del usuario."); isPlaying = false; stopSpectrum(); stopLogoBeat(); }
+  } finally { startInProgress = false; }
 }
+function pausePlayback(){ if (!audio) return; manualPaused = true; audio.pause(); isPlaying = false; playPauseBtn && (playPauseBtn.textContent = '▶'); stopLogoBeat(); stopSpectrum(); }
 
-function pausePlayback(){
-  if (!audio) return;
-  manualPaused = true;
-  audio.pause();
-  isPlaying = false;
-  playPauseBtn && (playPauseBtn.textContent = '▶');
-  stopLogoBeat();
-  stopSpectrum();
-}
+audio.addEventListener('playing', () => { isPlaying = true; playPauseBtn && (playPauseBtn.textContent = '⏸'); startSpectrum(); startLogoBeat(); });
+audio.addEventListener('pause', () => { const justStarted = (Date.now() - lastUserPlayAt) < 1200; if (!manualPaused && !justStarted) interrupted = true; if (manualPaused || !isPlaying) { stopSpectrum(); stopLogoBeat(); } });
+audio.addEventListener('error', () => { setTimeout(() => startPlayback({ forceReload: true }), 400); });
+audio.addEventListener('stalled', () => { if (!manualPaused) setTimeout(() => { if (audio.paused) startPlayback().catch(()=>{}); }, 600); });
+audio.addEventListener('ended', () => { if (!manualPaused) setTimeout(() => startPlayback({ forceReload: true }), 600); });
 
-audio.addEventListener('playing', () => {
-  isPlaying = true;
-  playPauseBtn && (playPauseBtn.textContent = '⏸');
-  startSpectrum();
-  startLogoBeat();
-});
-audio.addEventListener('pause', () => {
-  const justStarted = (Date.now() - lastUserPlayAt) < 1200;
-  if (!manualPaused && !justStarted) interrupted = true;
-  if (manualPaused || !isPlaying) {
-    stopSpectrum();
-    stopLogoBeat();
-  }
-});
-audio.addEventListener('error', () => {
-  setTimeout(() => startPlayback({ forceReload: true }), 400);
-});
-audio.addEventListener('stalled', () => {
-  if (!manualPaused) {
-    setTimeout(() => { if (audio.paused) startPlayback().catch(()=>{}); }, 600);
-  }
-});
-audio.addEventListener('ended', () => {
-  if (!manualPaused) setTimeout(() => startPlayback({ forceReload: true }), 600);
-});
-
-function tryAutoResume(){
-  if (interrupted && !manualPaused){
-    interrupted = false;
-    if (audio.paused) startPlayback().catch(()=>{});
-  }
-}
+function tryAutoResume(){ if (interrupted && !manualPaused){ interrupted = false; if (audio.paused) startPlayback().catch(()=>{}); } }
 window.addEventListener('focus', tryAutoResume);
 window.addEventListener('pageshow', tryAutoResume);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) tryAutoResume(); });
 
-window.addEventListener('online', () => {
-  if (audio.paused && !manualPaused) startPlayback({ forceReload: true });
-});
-if (navigator.connection?.addEventListener){
-  navigator.connection.addEventListener('change', () => {
-    if (audio.paused && !manualPaused) startPlayback({ forceReload: true });
-  });
-}
+window.addEventListener('online', () => { if (audio.paused && !manualPaused) startPlayback({ forceReload: true }); });
+if (navigator.connection?.addEventListener){ navigator.connection.addEventListener('change', () => { if (audio.paused && !manualPaused) startPlayback({ forceReload: true }); }); }
 
-playPauseBtn && playPauseBtn.addEventListener('click', () => {
-  if (!isPlaying) startPlayback();
-  else pausePlayback();
-});
+playPauseBtn && playPauseBtn.addEventListener('click', () => { if (!isPlaying) startPlayback(); else pausePlayback(); });
 
-// ====== Instalación Android (Samsung + Chrome + Firefox + etc.) ======
+/* === Instalación Android (definitiva) === */
 let deferredPrompt = null;
 
-// Detectar si estamos en modo standalone
-function isStandaloneAndroid() {
-  return window.matchMedia('(display-mode: standalone)').matches;
-}
+function isStandaloneAndroid(){ return window.matchMedia('(display-mode: standalone)').matches; }
+async function checkIfInstalled(){ if ('getInstalledRelatedApps' in navigator){ const related = await navigator.getInstalledRelatedApps(); if (related && related.length > 0) return true; } return false; }
 
-// Verificar instalación real con API
-async function checkIfInstalled() {
-  if ('getInstalledRelatedApps' in navigator) {
-    const related = await navigator.getInstalledRelatedApps();
-    if (related && related.length > 0) return true;
+// Mostrar siempre la burbuja en Android, salvo que ya esté instalada
+async function updateInstallBubble() {
+  if (isStandaloneAndroid() || localStorage.getItem('pwaInstalled') === 'true' || await checkIfInstalled()) {
+    installBubble && (installBubble.style.display = 'none');
+  } else {
+    installBubble && (installBubble.style.display = 'block');
   }
-  return false;
 }
+updateInstallBubble();
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  if (!isStandaloneAndroid()) {
-    installBubble && (installBubble.style.display = 'block');
-  }
+  updateInstallBubble();
 });
 
 installBubble?.addEventListener('click', async () => {
   if (isStandaloneAndroid() || localStorage.getItem('pwaInstalled') === 'true' || await checkIfInstalled()) {
-    installBubble.style.display = 'none';
-    return;
+    installBubble.style.display = 'none'; return;
   }
-
   if (deferredPrompt) {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     deferredPrompt = null;
     if (outcome === 'accepted') {
-      installBubble.style.display = 'none';
       localStorage.setItem('pwaInstalled', 'true');
+      installBubble.style.display = 'none';
     }
   } else {
     const ua = navigator.userAgent.toLowerCase();
     let msg = "Abre el menú ⋮ del navegador y toca 'Añadir a pantalla principal'.";
-
-    if (ua.includes("firefox")) {
-      msg = "En Firefox Android: menú ⋮ → 'Instalar' o 'Añadir a pantalla principal'.";
-    } else if (ua.includes("samsungbrowser")) {
-      msg = "En Samsung Internet: menú ☰ → 'Agregar a pantalla principal'.\n\n⚠️ Si ves el mensaje 'pantalla principal bloqueada', abre Ajustes → Pantalla de inicio y desbloquéalo, o usa Google Chrome para instalar sin problema.";
-    } else if (ua.includes("opr/") || ua.includes("opera")) {
-      msg = "En Opera: menú O → 'Instalar app' o 'Agregar a pantalla principal'.";
-    } else if (ua.includes("miui") || ua.includes("xiaomi")) {
-      msg = "En el navegador de Xiaomi: menú ⋮ → 'Agregar a pantalla de inicio'.";
-    } else if (ua.includes("chrome")) {
-      msg = "En Chrome Android: menú ⋮ → 'Instalar app'.";
-    }
-
+    if (ua.includes("firefox")) msg = "En Firefox Android: menú ⋮ → 'Instalar' o 'Añadir a pantalla principal'.";
+    else if (ua.includes("samsungbrowser")) msg = "En Samsung Internet: menú ☰ → 'Agregar a pantalla principal'.\n⚠️ Si ves 'pantalla principal bloqueada', revisa Ajustes → Pantalla de inicio o usa Google Chrome.";
+    else if (ua.includes("opr/") || ua.includes("opera")) msg = "En Opera: menú O → 'Instalar app' o 'Agregar a pantalla principal'.";
+    else if (ua.includes("miui") || ua.includes("xiaomi")) msg = "En Xiaomi Browser: menú ⋮ → 'Agregar a pantalla de inicio'.";
+    else if (ua.includes("chrome")) msg = "En Chrome Android: menú ⋮ → 'Instalar app'.";
     alert(msg);
   }
 });
 
-// Ocultar burbuja si ya está instalada al cargar
-(async () => {
-  if (isStandaloneAndroid() || localStorage.getItem('pwaInstalled') === 'true' || await checkIfInstalled()) {
-    installBubble && (installBubble.style.display = 'none');
-  }
-})();
-
-// ====== Instalación iOS ======
+/* === Instalación iOS === */
 function isIos(){ return /iphone|ipad|ipod/i.test(navigator.userAgent); }
 function isStandalone(){ return ('standalone' in navigator) && navigator.standalone; }
 document.addEventListener('DOMContentLoaded', () => {
@@ -262,7 +176,7 @@ closeIosPromptBtn?.addEventListener('click', () => {
   localStorage.setItem('iosPromptShown', 'true');
 });
 
-// ====== Subvistas ======
+/* === Subvistas === */
 function abrirPagina(pagina){
   const c = document.getElementById('iframe-container');
   const f = document.getElementById('subpage-frame');
@@ -273,32 +187,25 @@ function abrirPagina(pagina){
   if (!history.state || !history.state.subview) history.pushState({ subview:true }, '');
 }
 window.abrirPagina = abrirPagina;
-
 window.cerrarSubview = function(){
   const c = document.getElementById('iframe-container');
   const f = document.getElementById('subpage-frame');
   if (!c || !f) return;
-  c.style.display = 'none';
-  f.src = 'about:blank';
+  c.style.display = 'none'; f.src = 'about:blank';
   document.body.classList.remove('subview-open');
   if (history.state && history.state.subview) history.back();
 };
-window.addEventListener('popstate', () => {
-  const c = document.getElementById('iframe-container');
-  if (c && c.style.display === 'block') window.cerrarSubview();
-});
-window.addEventListener('message', (e) => {
-  if (e?.data?.type === 'close-subview') window.cerrarSubview?.();
-});
+window.addEventListener('popstate', () => { const c = document.getElementById('iframe-container'); if (c && c.style.display === 'block') window.cerrarSubview(); });
+window.addEventListener('message', (e) => { if (e?.data?.type === 'close-subview') window.cerrarSubview?.(); });
 
-// ====== Peli ======
+/* === Peli === */
 peliBubble?.addEventListener('click', () => {
   pausePlayback();
   const features = 'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes';
   window.open('peli.html', '_blank', features);
 });
 
-// ====== Compartir ======
+/* === Compartir === */
 function compartirApp(){
   const url = "https://labuenota.vercel.app/";
   const text = "¡Descarga la app de La Buenota Radio Online, se puede ver películas Gratis y tiene buena música!";
