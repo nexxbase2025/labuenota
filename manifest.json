@@ -1,9 +1,9 @@
 
-
 {
+  "id": "/?source=pwa",
   "name": "LA BUENOTA RADIO ONLINE",
-  "short_name": " LA BUENOTA",
-  "start_url": "/",
+  "short_name": "LA BUENOTA",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
