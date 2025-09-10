@@ -183,7 +183,7 @@ playPauseBtn && playPauseBtn.addEventListener('click', () => {
   else pausePlayback();
 });
 
-// ====== Instalación Android (mejorada) ======
+// ====== Instalación Android (compatibilidad total) ======
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
@@ -203,7 +203,23 @@ installBubble?.addEventListener('click', async () => {
       localStorage.setItem('pwaInstalled', 'true');
     }
   } else {
-    alert("Para instalar esta app: abre el menú ⋮ del navegador y toca 'Añadir a pantalla principal'.");
+    // Detectar navegador y dar instrucciones
+    const ua = navigator.userAgent.toLowerCase();
+    let msg = "Abre el menú ⋮ del navegador y toca 'Añadir a pantalla principal'.";
+
+    if (ua.includes("firefox")) {
+      msg = "En Firefox Android: menú ⋮ → 'Instalar' o 'Añadir a pantalla principal'.";
+    } else if (ua.includes("samsungbrowser")) {
+      msg = "En Samsung Internet: menú ☰ → 'Agregar a pantalla principal'.";
+    } else if (ua.includes("opr/") || ua.includes("opera")) {
+      msg = "En Opera: menú O → 'Instalar app' o 'Agregar a pantalla principal'.";
+    } else if (ua.includes("miui") || ua.includes("xiaomi")) {
+      msg = "En el navegador de Xiaomi: menú ⋮ → 'Agregar a pantalla de inicio'.";
+    } else if (ua.includes("chrome")) {
+      msg = "En Chrome Android: menú ⋮ → 'Instalar app'.";
+    }
+
+    alert(msg);
   }
 });
 
