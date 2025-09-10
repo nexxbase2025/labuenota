@@ -123,7 +123,6 @@ let deferredPrompt = null;
 function isStandaloneAndroid(){ return window.matchMedia('(display-mode: standalone)').matches; }
 async function checkIfInstalled(){ if ('getInstalledRelatedApps' in navigator){ const related = await navigator.getInstalledRelatedApps(); if (related && related.length > 0) return true; } return false; }
 
-// Mostrar siempre la burbuja en Android, salvo que ya esté instalada
 async function updateInstallBubble() {
   if (isStandaloneAndroid() || localStorage.getItem('pwaInstalled') === 'true' || await checkIfInstalled()) {
     installBubble && (installBubble.style.display = 'none');
@@ -143,7 +142,9 @@ installBubble?.addEventListener('click', async () => {
   if (isStandaloneAndroid() || localStorage.getItem('pwaInstalled') === 'true' || await checkIfInstalled()) {
     installBubble.style.display = 'none'; return;
   }
+
   if (deferredPrompt) {
+    // 👉 Chrome/Brave/Edge: usar prompt oficial
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     deferredPrompt = null;
@@ -152,14 +153,15 @@ installBubble?.addEventListener('click', async () => {
       installBubble.style.display = 'none';
     }
   } else {
+    // 👉 Solo navegadores sin soporte muestran instrucciones
     const ua = navigator.userAgent.toLowerCase();
-    let msg = "Abre el menú ⋮ del navegador y toca 'Añadir a pantalla principal'.";
+    let msg = null;
     if (ua.includes("firefox")) msg = "En Firefox Android: menú ⋮ → 'Instalar' o 'Añadir a pantalla principal'.";
     else if (ua.includes("samsungbrowser")) msg = "En Samsung Internet: menú ☰ → 'Agregar a pantalla principal'.\n⚠️ Si ves 'pantalla principal bloqueada', revisa Ajustes → Pantalla de inicio o usa Google Chrome.";
     else if (ua.includes("opr/") || ua.includes("opera")) msg = "En Opera: menú O → 'Instalar app' o 'Agregar a pantalla principal'.";
     else if (ua.includes("miui") || ua.includes("xiaomi")) msg = "En Xiaomi Browser: menú ⋮ → 'Agregar a pantalla de inicio'.";
-    else if (ua.includes("chrome")) msg = "En Chrome Android: menú ⋮ → 'Instalar app'.";
-    alert(msg);
+
+    if (msg) alert(msg);
   }
 });
 
